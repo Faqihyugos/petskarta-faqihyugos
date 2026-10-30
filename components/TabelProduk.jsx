@@ -1,7 +1,15 @@
-import { formatRupiah } from "@/lib/format";
+import { formatRupiah, formatTanggal } from "@/lib/format";
 import Tombol from "@/components/Tombol";
 
-export default function TabelProduk({ daftarProduk }) {
+export default function TabelProduk({ daftarProduk = [] }) {
+  if (!daftarProduk || daftarProduk.length === 0) {
+    return (
+      <div className="rounded-2xl border border-garis bg-permukaan p-8 text-center text-sm text-teks-lembut">
+        Belum ada produk atau layanan yang terdaftar.
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-x-auto rounded-2xl border border-garis">
       <table className="w-full min-w-[560px] text-left text-sm">
@@ -10,6 +18,7 @@ export default function TabelProduk({ daftarProduk }) {
             <th className="px-4 py-3 font-semibold">Produk</th>
             <th className="px-4 py-3 font-semibold">Kategori</th>
             <th className="px-4 py-3 font-semibold">Harga</th>
+            <th className="px-4 py-3 font-semibold">Tanggal</th>
             <th className="px-4 py-3 font-semibold">
               <span className="sr-only">Aksi</span>
             </th>
@@ -20,12 +29,19 @@ export default function TabelProduk({ daftarProduk }) {
             <tr key={produk.id} className="border-t border-garis">
               <td className="px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <img src={produk.foto_url} alt="" className="h-10 w-10 rounded-md object-cover" />
+                  <img
+                    src={produk.foto_url || "/produk/kelinci.svg"}
+                    alt=""
+                    className="h-10 w-10 rounded-md object-cover bg-permukaan"
+                  />
                   <span className="font-semibold">{produk.nama}</span>
                 </div>
               </td>
-              <td className="px-4 py-3 text-teks-lembut">{produk.kategori}</td>
+              <td className="px-4 py-3 text-teks-lembut">{produk.kategori || "-"}</td>
               <td className="px-4 py-3">{formatRupiah(produk.harga)}</td>
+              <td className="px-4 py-3 text-teks-lembut">
+                {formatTanggal(produk.created_at)}
+              </td>
               <td className="px-4 py-3">
                 <div className="flex justify-end gap-2">
                   {/* US-09 dan US-10 (bonus): ubah dan hapus produk */}
