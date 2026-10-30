@@ -59,15 +59,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="id" suppressHydrationWarning>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("petskarta_theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.classList.add("dark");}}catch(e){}})();`,
-          }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        {/* K-7: Skrip tema & Structured Data aman tanpa innerHTML berbahaya */}
+        <script src="/theme.js" />
+        <script type="application/ld+json">
+          {JSON.stringify(jsonLd)}
+        </script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link

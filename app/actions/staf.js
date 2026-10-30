@@ -1,12 +1,12 @@
 "use server";
 
-import { createServerClient } from "@/lib/supabase/server";
+import { createAuthServerClient } from "@/lib/supabase/server";
 import { tambahStafBaru, toggleStatusStaf } from "@/lib/staf-admin";
 import { catatAuditLog } from "@/lib/audit-log";
 import { revalidatePath } from "next/cache";
 
 export async function tambahStafAction(prevState, formData) {
-  const supabase = createServerClient();
+  const supabase = await createAuthServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -35,7 +35,7 @@ export async function tambahStafAction(prevState, formData) {
 }
 
 export async function toggleStafAction(id) {
-  const supabase = createServerClient();
+  const supabase = await createAuthServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

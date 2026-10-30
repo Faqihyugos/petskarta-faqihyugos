@@ -1,12 +1,12 @@
 "use server";
 
-import { createServerClient } from "@/lib/supabase/server";
+import { createAuthServerClient } from "@/lib/supabase/server";
 import { perbaruiPengaturan, ambilPengaturan } from "@/lib/pengaturan";
 import { revalidatePath } from "next/cache";
 
 // Server action untuk mengubah banner pengumuman (US-42)
 export async function simpanBannerAction(prevState, formData) {
-  const supabase = createServerClient();
+  const supabase = await createAuthServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -34,7 +34,7 @@ export async function simpanBannerAction(prevState, formData) {
 
 // Server action untuk mengubah kontak multi-cabang (US-43)
 export async function simpanKontakCabangAction(prevState, formData) {
-  const supabase = createServerClient();
+  const supabase = await createAuthServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

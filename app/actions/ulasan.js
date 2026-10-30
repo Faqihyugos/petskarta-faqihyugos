@@ -2,7 +2,21 @@
 
 import { simpanUlasanBaru, ubahStatusUlasan, hapusUlasanDatabase } from "@/lib/ulasan";
 import { revalidatePath } from "next/cache";
-import { createServerClient } from "@/lib/supabase/server";
+import { createAuthServerClient } from "@/lib/supabase/server";
+
+// K-12: Rate limit pengiriman form ulasan (maksimal 3 ulasan per 5 menit)
+const ulasanRateLimitMap = new Map();
+
+function checkUlasanRateLimit(nama) {
+  const key = nama.toLowerCase().slice(0, 30);
+  const now = Date.now();
+  const records = ulasanRateLimitMap.get(key) || [];
+  const valid = records.filter((t) => now - t < 300000);
+  if (valid.length >= 3) return false;
+  valid.push(now);
+  ulasanRateLimitMap.set(key, valid);
+  return true;
+}
 
 // Server Action untuk pengiriman ulasan pelanggan (US-38)
 export async function kirimUlasanAction(prevState, formData) {
@@ -14,6 +28,14 @@ export async function kirimUlasanAction(prevState, formData) {
   // Anti-spam honeypot: bot mengisi field tersembunyi ini
   if (honeypot) {
     return { sukses: false, pesan: "Terjadi kesalahan sistem, silakan coba lagi." };
+  }
+
+  // K-12: Rate limit form ulasan
+  if (!checkUlasanRateLimit(nama)) {
+    return {
+      sukses: false,
+      pesan: "Pengiriman ulasan terlalu sering. Harap tunggu beberapa menit sebelum mencoba lagi.",
+    };
   }
 
   // Validasi input di sisi server
@@ -50,7 +72,7 @@ export async function kirimUlasanAction(prevState, formData) {
 
 // Server Action untuk moderasi ulasan oleh admin (US-39)
 export async function setujuiUlasanAction(id, disetujui) {
-  const supabase = createServerClient();
+  const supabase = await createAuthServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Akses ditolak: Hanya admin yang diizinkan.");
 
@@ -61,7 +83,7 @@ export async function setujuiUlasanAction(id, disetujui) {
 }
 
 export async function hapusUlasanAction(id) {
-  const supabase = createServerClient();
+  const supabase = await createAuthServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Akses ditolak: Hanya admin yang diizinkan.");
 

@@ -1,6 +1,6 @@
 "use server";
 
-import { createServerClient } from "@/lib/supabase/server";
+import { createAuthServerClient } from "@/lib/supabase/server";
 import {
   simpanKategoriBaru,
   perbaruiNamaKategori,
@@ -10,7 +10,7 @@ import { catatAuditLog } from "@/lib/audit-log";
 import { revalidatePath } from "next/cache";
 
 export async function tambahKategoriAction(prevState, formData) {
-  const supabase = createServerClient();
+  const supabase = await createAuthServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -33,7 +33,7 @@ export async function tambahKategoriAction(prevState, formData) {
 }
 
 export async function ubahKategoriAction(namaLama, namaBaru) {
-  const supabase = createServerClient();
+  const supabase = await createAuthServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -55,7 +55,7 @@ export async function ubahKategoriAction(namaLama, namaBaru) {
 }
 
 export async function hapusKategoriAction(nama) {
-  const supabase = createServerClient();
+  const supabase = await createAuthServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

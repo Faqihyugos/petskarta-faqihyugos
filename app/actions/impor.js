@@ -1,11 +1,11 @@
 "use server";
 
-import { createServerClient } from "@/lib/supabase/server";
+import { createAuthServerClient } from "@/lib/supabase/server";
 import { catatAuditLog } from "@/lib/audit-log";
 import { revalidatePath } from "next/cache";
 
 export async function imporProdukCSVAction(prevState, formData) {
-  const supabase = createServerClient();
+  const supabase = await createAuthServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
