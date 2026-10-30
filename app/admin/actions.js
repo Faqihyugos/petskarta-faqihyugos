@@ -372,24 +372,29 @@ export async function hapusProduk(idOrPrevState, maybeFormData) {
   }
 
   if (!id) {
-    return { error: "ID produk tidak valid." };
+    throw new Error("ID produk tidak valid.");
   }
 
-  // Verifikasi login admin di server
-  const supabase = await createAuthServerClient();
+  // Verifikasi login admin di server (tolak jika unauthenticated)
+  const authSupabase = await createAuthServerClient();
   const {
     data: { user },
     error: userError,
-  } = await supabase.auth.getUser();
+  } = await authSupabase.auth.getUser();
 
   if (userError || !user) {
-    return { error: "Anda harus login terlebih dahulu untuk menghapus produk." };
+    throw new Error("Akses ditolak: Anda harus login terlebih dahulu untuk menghapus produk.");
   }
 
-  const { error } = await supabase.from("produk").delete().eq("id", id);
+  const idNum = parseInt(id, 10);
+  const targetId = isNaN(idNum) ? id : idNum;
+
+  // Gunakan database client server untuk eksekusi hapus aman
+  const supabase = createServerClient();
+  const { error } = await supabase.from("produk").delete().eq("id", targetId);
 
   if (error) {
-    return { error: `Gagal menghapus produk: ${error.message}` };
+    throw new Error(`Gagal menghapus produk: ${error.message}`);
   }
 
   revalidatePath("/admin");

@@ -1,10 +1,16 @@
+const isDev = process.env.NODE_ENV === "development";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: { ignoreBuildErrors: true },
   async headers() {
+    const scriptSrc = isDev
+      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://fonts.googleapis.com"
+      : "script-src 'self' 'unsafe-inline' https://fonts.googleapis.com";
+
     const cspDirectives = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      scriptSrc,
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: blob: https:",

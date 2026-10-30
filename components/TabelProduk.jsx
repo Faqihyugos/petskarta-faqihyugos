@@ -38,7 +38,7 @@ export default function TabelProduk({ daftarProduk = [] }) {
     <div className="flex flex-col gap-4">
       {/* Bar Pencarian & Tombol Ekspor CSV (US-33 & US-35) */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="relative flex-1 min-w-[240px]">
+        <div className="relative flex-1 min-w-60">
           <input
             type="search"
             value={kataKunci}
@@ -73,7 +73,7 @@ export default function TabelProduk({ daftarProduk = [] }) {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-garis bg-latar shadow-xs">
-          <table className="w-full min-w-[620px] text-left text-sm">
+          <table className="w-full min-w-155 text-left text-sm">
             <thead className="bg-permukaan border-b border-garis text-xs uppercase tracking-wider text-teks-lembut">
               <tr>
                 <th className="px-4 py-3.5 font-bold">Produk / Layanan</th>
@@ -187,7 +187,16 @@ export default function TabelProduk({ daftarProduk = [] }) {
                           }}
                         >
                           <input type="hidden" name="id" value={produk.id} />
-                          <Tombol type="submit" varian="bahaya" className="py-1 px-2.5 text-xs">
+                          <Tombol
+                            type="submit"
+                            varian="bahaya"
+                            className="py-1 px-2.5 text-xs"
+                            onClick={(e) => {
+                              if (!window.confirm(`Apakah Anda yakin ingin menghapus "${produk.nama}"?`)) {
+                                e.preventDefault();
+                              }
+                            }}
+                          >
                             Hapus
                           </Tombol>
                         </form>
