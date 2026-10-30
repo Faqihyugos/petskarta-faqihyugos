@@ -4,7 +4,13 @@ import { useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import KartuProduk from "@/components/KartuProduk";
 
-export default function KatalogInteraktif({ daftarProduk = [], urutAktif = "terbaru" }) {
+export default function KatalogInteraktif({
+  daftarProduk = [],
+  urutAktif = "terbaru",
+  halamanAktif = 1,
+  totalHalaman = 1,
+  totalData = 0,
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -44,6 +50,19 @@ export default function KatalogInteraktif({ daftarProduk = [], urutAktif = "terb
       params.delete("urut");
     } else {
       params.set("urut", opsi);
+    }
+    params.set("halaman", "1");
+    const queryStr = params.toString();
+    router.push(queryStr ? `/?${queryStr}` : "/");
+  };
+
+  // Handler paginasi server (US-16)
+  const handleGantiHalaman = (nomorHalaman) => {
+    const params = new URLSearchParams(searchParams ? searchParams.toString() : "");
+    if (nomorHalaman <= 1) {
+      params.delete("halaman");
+    } else {
+      params.set("halaman", nomorHalaman.toString());
     }
     const queryStr = params.toString();
     router.push(queryStr ? `/?${queryStr}` : "/");
@@ -140,6 +159,57 @@ export default function KatalogInteraktif({ daftarProduk = [], urutAktif = "terb
             <KartuProduk key={produk.id} produk={produk} />
           ))}
         </div>
+      )}
+
+      {/* Kontrol Paginasi Server (US-16) */}
+      {totalHalaman > 1 && (
+        <nav
+          aria-label="Navigasi Halaman"
+          className="flex flex-wrap items-center justify-between gap-4 border-t border-garis pt-6"
+        >
+          <p className="text-xs font-medium text-teks-lembut">
+            Menampilkan halaman{" "}
+            <span className="font-semibold text-teks">{halamanAktif}</span> dari{" "}
+            <span className="font-semibold text-teks">{totalHalaman}</span> ({totalData} total item)
+          </p>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              disabled={halamanAktif <= 1}
+              onClick={() => handleGantiHalaman(halamanAktif - 1)}
+              className="rounded-lg border border-garis bg-permukaan px-3 py-1.5 text-xs font-semibold text-teks transition hover:border-utama hover:text-utama disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              &larr; Sebelumnya
+            </button>
+
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalHalaman }, (_, i) => i + 1).map((nomor) => (
+                <button
+                  key={nomor}
+                  type="button"
+                  onClick={() => handleGantiHalaman(nomor)}
+                  className={`h-8 w-8 rounded-lg text-xs font-semibold transition ${
+                    halamanAktif === nomor
+                      ? "bg-utama text-white"
+                      : "border border-garis bg-permukaan text-teks hover:border-utama hover:text-utama"
+                  }`}
+                >
+                  {nomor}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              disabled={halamanAktif >= totalHalaman}
+              onClick={() => handleGantiHalaman(halamanAktif + 1)}
+              className="rounded-lg border border-garis bg-permukaan px-3 py-1.5 text-xs font-semibold text-teks transition hover:border-utama hover:text-utama disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Selanjutnya &rarr;
+            </button>
+          </div>
+        </nav>
       )}
     </div>
   );
