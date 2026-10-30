@@ -64,6 +64,22 @@ export async function proxy(request) {
     return redirectResponse;
   }
 
+  // Tambahkan Header Keamanan Global (K-6 & K-11)
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  response.headers.set(
+    "Strict-Transport-Security",
+    "max-age=63072000; includeSubDomains; preload"
+  );
+  response.headers.set("X-XSS-Protection", "1; mode=block");
+
+  // K-8: Cegah pengindeksan rute /admin oleh robot mesin pencari
+  if (request.nextUrl.pathname.startsWith("/admin")) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet");
+  }
+
   return response;
 }
 
