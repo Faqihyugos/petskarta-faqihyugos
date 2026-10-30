@@ -1,0 +1,25 @@
+{
+  "name": "Petskarta - Kelinci Hias & Bunny Hotel Jakarta",
+  "short_name": "Petskarta",
+  "description": "Spesialis kelinci hias (Holland Lop & Netherland Dwarf), Bunny Hotel ber-AC & CCTV, serta perawatan Scabies Healer sejak 2016 di Jakarta.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1f6b4f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+

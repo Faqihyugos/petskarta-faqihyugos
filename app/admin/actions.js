@@ -254,6 +254,97 @@ export async function hapusProduk(idOrPrevState, maybeFormData) {
 export const deleteProduk = hapusProduk;
 
 /**
+ * US-14: Generator Deskripsi Kelinci & Layanan Berbasis AI
+ * Mengeksekusi Google Gemini API di sisi server demi keamanan API key.
+ */
+export async function generateDeskripsiAI(params) {
+  const nama = params?.nama?.trim();
+  const kategori = params?.kategori?.trim() || "Umum";
+
+  if (!nama) {
+    return { error: "Nama produk atau layanan wajib diisi terlebih dahulu." };
+  }
+
+  // Verifikasi login admin di server
+  const supabase = await createAuthServerClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return { error: "Anda harus login terlebih dahulu." };
+  }
+
+  const geminiApiKey = process.env.GEMINI_API_KEY;
+
+  if (geminiApiKey) {
+    try {
+      const prompt = `Kamu adalah copywriter profesional untuk Petskarta, UMKM spesialis kelinci hias (Holland Lop, Netherland Dwarf), penitipan Bunny Hotel ber-AC & CCTV, serta perawatan kelinci (Scabies Healer, grooming) terpercaya sejak 2016 di Jakarta.
+
+Buatlah 1-2 paragraf deskripsi produk/layanan yang persuasif, profesional, dan informatif dalam bahasa Indonesia untuk:
+- Nama: ${nama}
+- Kategori: ${kategori}
+
+Sertakan karakteristik, keunggulan fasilitas, atau saran perawatan yang relevan. Buat sebagai narasi mengalir yang elegan dan siap dibaca calon adopter/pelanggan tanpa bullet point panjang atau simbol asterik berlebihan.`;
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [{ text: prompt }],
+              },
+            ],
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        if (text) {
+          return { success: true, deskripsi: text };
+        }
+      }
+    } catch {
+      // Lanjut ke fallback jika koneksi API luar terkendala
+    }
+  }
+
+  // Fallback cerdas berbasis domain Petskarta (jika offline / tanpa API key)
+  const isHotel =
+    kategori.toLowerCase().includes("hotel") ||
+    nama.toLowerCase().includes("hotel");
+  const isKelinci =
+    kategori.toLowerCase().includes("kelinci") ||
+    nama.toLowerCase().includes("lop") ||
+    nama.toLowerCase().includes("dwarf");
+  const isMedis =
+    kategori.toLowerCase().includes("grooming") ||
+    kategori.toLowerCase().includes("rawat") ||
+    nama.toLowerCase().includes("scabies");
+
+  let deskripsiFallback = "";
+  if (isHotel) {
+    deskripsiFallback = `Layanan penitipan kelinci harian eksklusif di ruangan ber-AC dengan pantauan CCTV 24 jam. Dilengkapi alas foot rest plastik yang aman dan nyaman untuk telapak kaki kelinci, jatah rumput Timothy serat tinggi tak terbatas, serta waktu bermain harian (playtime) terkontrol agar kelinci kesayangan Anda tetap aktif, sehat, dan bebas stres selama Anda bepergian.`;
+  } else if (isKelinci) {
+    deskripsiFallback = `Kelinci hias ras unggulan dengan karakteristik sangat ramah, aktif, dan bertubuh proporsional. Seluruh indukan dan anakan dirawat dengan standar kebersihan tinggi, telah diberikan obat cacing rutin, vitamin, serta diet serat terbaik. Sangat ideal sebagai sahabat keluarga di rumah maupun apartemen, disertai garansi pengiriman aman se-Pulau Jawa dan luar pulau.`;
+  } else if (isMedis) {
+    deskripsiFallback = `Perawatan higienis intensif yang ditangani langsung oleh praktisi berpengalaman Petskarta. Menggunakan formula dan obat khusus yang terbukti ampuh dan aman untuk kulit sensitif kelinci, membantu mengatasi jamur, parasit, dan scabies hingga tuntas, serta merapikan bulu agar kelinci kembali sehat, bersih, dan lincah.`;
+  } else {
+    deskripsiFallback = `Produk perlengkapan dan nutrisi premium pilihan dari Petskarta untuk menunjang tumbuh kembang optimal serta kenyamanan hewan kesayangan Anda. Higienis, teruji, dan siap melengkapi kebutuhan harian kelinci kesayangan Anda dengan kualitas terbaik.`;
+  }
+
+  return { success: true, deskripsi: deskripsiFallback };
+}
+
+/**
  * Memverifikasi status login admin di server.
  * Mengembalikan data user admin jika terautentikasi, atau null jika tidak valid.
  */
