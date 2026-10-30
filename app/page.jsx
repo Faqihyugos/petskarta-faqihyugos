@@ -1,4 +1,9 @@
+import Link from "next/link";
 import KatalogInteraktif from "@/components/KatalogInteraktif";
+import TerakhirDilihat from "@/components/TerakhirDilihat";
+import TrustCenter from "@/components/TrustCenter";
+import { ambilUlasanPublik } from "@/lib/ulasan";
+import { ekstrakPrioritas } from "@/lib/prioritas";
 import { createServerClient } from "@/lib/supabase/server";
 import { toko } from "@/lib/toko";
 
@@ -39,18 +44,36 @@ export default async function HalamanKatalog({ searchParams }) {
     if (error) {
       pesanError = error.message || "Gagal mengambil data produk dari database.";
     } else {
-      daftarProduk = data;
+      // US-32 & US-47: Sembunyikan item arsip & urutkan prioritas katalog
+      daftarProduk = (data || [])
+        .filter((p) => !p.deskripsi?.includes("[STATUS:ARSIP]"))
+        .sort((a, b) => {
+          if (urut === "terbaru") {
+            const pA = ekstrakPrioritas(a.deskripsi);
+            const pB = ekstrakPrioritas(b.deskripsi);
+            if (pB !== pA) return pB - pA;
+          }
+          return 0;
+        });
       totalData = count || 0;
     }
   } catch (err) {
     pesanError = err.message || "Terjadi kesalahan saat memuat data produk.";
   }
 
+  const ulasanList = await ambilUlasanPublik();
   const totalHalaman = Math.max(1, Math.ceil(totalData / pageSize));
 
   return (
     <>
-      <section className="py-10 sm:py-14">
+      <section className="py-8 sm:py-12">
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-utama/30 bg-utama/10 px-3 py-1 text-xs font-bold text-utama">
+          <span>📍</span>
+          <span>2 Cabang Resmi Aktif Beroperasi (Pondok Pinang &amp; Jatinegara)</span>
+          <Link href="/cabang" className="ml-1 underline hover:text-utama-gelap">
+            Lihat Direktori Cabang &rarr;
+          </Link>
+        </div>
         <h1 className="max-w-2xl text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
           {toko.nama}
         </h1>
@@ -86,6 +109,16 @@ export default async function HalamanKatalog({ searchParams }) {
           />
         )}
       </section>
+
+      {/* US-38: Trust Center & Google Reviews 5.0 */}
+      <TrustCenter
+        ulasanList={ulasanList}
+        ratingGoogle={toko.ratingGoogle}
+        totalGoogle={toko.totalUlasanGoogle}
+      />
+
+      {/* US-36: Histori Terakhir Dilihat di Beranda */}
+      <TerakhirDilihat />
     </>
   );
 }

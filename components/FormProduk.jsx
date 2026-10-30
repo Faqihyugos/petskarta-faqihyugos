@@ -66,7 +66,7 @@ export default function FormProduk({ produk = {}, labelTombol, action }) {
   };
 
   return (
-    <form action={formAction} className="flex max-w-xl flex-col gap-4">
+    <form action={formAction} encType="multipart/form-data" className="flex max-w-xl flex-col gap-4">
       {state?.error && (
         <div className="rounded-lg border border-garis bg-permukaan p-3 text-sm font-medium text-bahaya">
           {state.error}
@@ -150,6 +150,21 @@ export default function FormProduk({ produk = {}, labelTombol, action }) {
         value={kategori}
         onChange={(e) => setKategori(e.target.value)}
       />
+      <div className="flex flex-col gap-1.5 rounded-xl border border-dashed border-garis bg-permukaan/50 p-4">
+        <label className="text-sm font-semibold text-teks">
+          Unggah Foto dari Perangkat (Supabase Storage)
+        </label>
+        <input
+          type="file"
+          name="berkas_foto"
+          accept="image/png,image/jpeg,image/webp,image/svg+xml"
+          className="text-xs text-teks file:mr-3 file:rounded-lg file:border-0 file:bg-utama file:px-3 file:py-2 file:text-xs file:font-bold file:text-white hover:file:bg-utama-gelap cursor-pointer"
+        />
+        <p className="text-xs text-teks-lembut">
+          Mendukung format JPG, PNG, WEBP, SVG (maks. 5 MB). Jika diunggah, foto ini otomatis tersimpan di storage server.
+        </p>
+      </div>
+
       <div className="flex flex-col gap-1.5">
         <Input
           label="Link foto (Mendukung multi-foto)"

@@ -3,6 +3,9 @@ import { formatRupiah } from "@/lib/format";
 import { cekKetersediaan } from "@/lib/ketersediaan";
 import { ekstrakPromoDanBadge } from "@/lib/promo";
 import TombolTambahKeranjang from "@/components/TombolTambahKeranjang";
+import TombolFavorit from "@/components/TombolFavorit";
+import TombolKomparasi from "@/components/TombolKomparasi";
+import { buatSlugKategori } from "@/lib/kategori";
 
 export default function KartuProduk({ produk }) {
   const thumbnail =
@@ -13,37 +16,55 @@ export default function KartuProduk({ produk }) {
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-garis bg-latar transition hover:border-utama/50 hover:shadow-sm">
       {/* Gambar Thumbnail Produk */}
-      <Link
-        href={`/produk/${produk.id}`}
-        className="relative aspect-square w-full overflow-hidden bg-permukaan"
-      >
-        <img
-          src={thumbnail}
-          alt={produk.nama}
-          className={`h-full w-full object-cover transition duration-300 group-hover:scale-105 ${
-            !tersedia ? "opacity-75 grayscale-[20%]" : ""
-          }`}
-        />
+      <div className="relative aspect-square w-full overflow-hidden bg-permukaan">
+        <Link
+          href={`/produk/${produk.id}`}
+          className="block h-full w-full"
+        >
+          <img
+            src={thumbnail}
+            alt={produk.nama}
+            className={`h-full w-full object-cover transition duration-300 group-hover:scale-105 ${
+              !tersedia ? "opacity-75 grayscale-[20%]" : ""
+            }`}
+          />
+        </Link>
 
         {/* Badge Ketersediaan (US-19) */}
         {!tersedia && (
-          <span className="absolute left-2.5 top-2.5 rounded-md bg-bahaya px-2 py-0.5 text-[11px] font-bold text-white shadow-sm">
+          <span className="absolute left-2.5 top-2.5 rounded-md bg-bahaya px-2 py-0.5 text-[11px] font-bold text-white shadow-sm pointer-events-none">
             {label}
           </span>
         )}
 
         {/* Badge Promo / Kepercayaan (US-20) */}
         {badges.length > 0 && tersedia && (
-          <span className="absolute right-2.5 top-2.5 max-w-[85%] truncate rounded-md bg-utama/90 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-xs shadow-sm">
+          <span className="absolute right-2.5 top-2.5 max-w-[85%] truncate rounded-md bg-utama/90 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-xs shadow-sm pointer-events-none">
             {badges[0]}
           </span>
         )}
-      </Link>
+
+        {/* Tombol Komparasi (US-37) */}
+        <div className="absolute bottom-2 left-2 z-10">
+          <TombolKomparasi produk={produk} />
+        </div>
+
+        {/* Tombol Favorit Wishlist (US-24) */}
+        <div className="absolute bottom-2 right-2 z-10">
+          <TombolFavorit id={produk.id} nama={produk.nama} ukuran="kecil" />
+        </div>
+      </div>
 
       {/* Konten & Informasi Produk */}
       <div className="flex flex-1 flex-col gap-2 p-3">
         <div className="flex items-center justify-between text-xs text-teks-lembut">
-          <span>{produk.kategori}</span>
+          {/* US-49: Tag kategori tertaut ke halaman kategori */}
+          <Link
+            href={`/kategori/${buatSlugKategori(produk.kategori)}`}
+            className="hover:text-utama hover:underline transition-colors font-medium truncate max-w-[65%]"
+          >
+            {produk.kategori}
+          </Link>
           {diskonPersen > 0 && (
             <span className="font-bold text-bahaya">Hemat {diskonPersen}%</span>
           )}

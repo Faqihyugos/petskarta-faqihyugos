@@ -1,6 +1,8 @@
 import NavAdmin from "@/components/NavAdmin";
 import TabelProduk from "@/components/TabelProduk";
 import Tombol from "@/components/Tombol";
+import DashboardAnalitikAdmin from "@/components/DashboardAnalitikAdmin";
+import { ambilRingkasanAnalitik } from "@/lib/analitik";
 import { createAuthServerClient, createServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -36,11 +38,21 @@ export default async function HalamanAdmin() {
     pesanError = err.message;
   }
 
+  // US-30 & US-41: Analitik performa toko & klik booking
+  const analitik = await ambilRingkasanAnalitik(daftarProduk);
+
   return (
-    <div className="flex flex-col gap-6 py-8">
+    <div className="flex flex-col gap-8 py-8">
       <NavAdmin />
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-extrabold">Produk</h1>
+
+      {/* US-30 & US-41: Dashboard Analitik Ringkasan */}
+      <DashboardAnalitikAdmin analitik={analitik} />
+
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-garis">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight">Katalog Produk &amp; Layanan</h1>
+          <p className="text-xs text-teks-lembut">Kelola stok kelinci, kamar hotel, dan paket perawatan.</p>
+        </div>
         <Tombol href="/admin/produk/baru">Tambah produk</Tombol>
       </div>
 

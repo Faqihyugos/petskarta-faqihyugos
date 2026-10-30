@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { toko } from "@/lib/toko";
 import TombolKeranjangHeader from "@/components/TombolKeranjangHeader";
+import ToggleTema from "@/components/ToggleTema";
 
 export default function Header() {
   return (
@@ -12,7 +13,14 @@ export default function Header() {
             {toko.nama}
           </span>
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <Link
+            href="/cabang"
+            className="text-xs sm:text-sm font-semibold text-teks-lembut hover:text-utama transition-colors"
+          >
+            Cabang &amp; Kontak
+          </Link>
+          <ToggleTema />
           <TombolKeranjangHeader />
         </div>
       </div>

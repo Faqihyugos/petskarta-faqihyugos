@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import KartuProduk from "@/components/KartuProduk";
+import { useFavorit } from "@/context/FavoritContext";
 
 export default function KatalogInteraktif({
   daftarProduk = [],
@@ -13,9 +14,11 @@ export default function KatalogInteraktif({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { isFavorit, totalFavorit, sudahDimuat } = useFavorit();
 
   const [kataKunci, setKataKunci] = useState("");
   const [kategoriDipilih, setKategoriDipilih] = useState("Semua");
+  const [hanyaFavorit, setHanyaFavorit] = useState(false);
 
   // Dapatkan daftar kategori unik dari data produk
   const daftarKategori = useMemo(() => {
@@ -25,11 +28,15 @@ export default function KatalogInteraktif({
     return ["Semua", ...unik];
   }, [daftarProduk]);
 
-  // Saring produk berdasarkan kategori dan kata kunci
+  // Saring produk berdasarkan kategori, kata kunci, dan filter favorit (US-11 & US-24)
   const hasilFilter = useMemo(() => {
     const query = kataKunci.toLowerCase().trim();
 
     return daftarProduk.filter((produk) => {
+      if (hanyaFavorit && sudahDimuat && !isFavorit(produk.id)) {
+        return false;
+      }
+
       const cocokKategori =
         kategoriDipilih === "Semua" || produk.kategori === kategoriDipilih;
 
@@ -41,7 +48,7 @@ export default function KatalogInteraktif({
 
       return cocokKategori && cocokKataKunci;
     });
-  }, [daftarProduk, kategoriDipilih, kataKunci]);
+  }, [daftarProduk, kategoriDipilih, kataKunci, hanyaFavorit, isFavorit, sudahDimuat]);
 
   // Handler pengurutan server (US-15)
   const handleGantiUrutan = (opsi) => {
@@ -95,12 +102,15 @@ export default function KatalogInteraktif({
         {/* Pilihan Kategori */}
         <div className="flex flex-wrap gap-2">
           {daftarKategori.map((kategori) => {
-            const aktif = kategoriDipilih === kategori;
+            const aktif = !hanyaFavorit && kategoriDipilih === kategori;
             return (
               <button
                 key={kategori}
                 type="button"
-                onClick={() => setKategoriDipilih(kategori)}
+                onClick={() => {
+                  setHanyaFavorit(false);
+                  setKategoriDipilih(kategori);
+                }}
                 className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-colors ${
                   aktif
                     ? "bg-utama text-white"
@@ -111,6 +121,23 @@ export default function KatalogInteraktif({
               </button>
             );
           })}
+
+          {/* Tab Filter Favorit (US-24) */}
+          <button
+            type="button"
+            onClick={() => {
+              setHanyaFavorit((prev) => !prev);
+            }}
+            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+              hanyaFavorit
+                ? "bg-bahaya text-white"
+                : "border border-bahaya/40 bg-permukaan text-bahaya hover:bg-bahaya/10"
+            }`}
+            title="Tampilkan hanya item yang ditandai favorit"
+          >
+            <span>❤️</span>
+            <span>Favorit Saya {totalFavorit > 0 ? `(${totalFavorit})` : ""}</span>
+          </button>
         </div>
 
         {/* Pilihan Urutan (US-15) */}

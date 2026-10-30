@@ -1,9 +1,14 @@
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import BannerPengumuman from "@/components/BannerPengumuman";
+import AsistenKelinciAI from "@/components/AsistenKelinciAI";
 import { toko } from "@/lib/toko";
 import { KeranjangProvider } from "@/context/KeranjangContext";
+import { FavoritProvider } from "@/context/FavoritContext";
+import { KomparasiProvider } from "@/context/KomparasiContext";
 import DrawerKeranjang from "@/components/DrawerKeranjang";
+import BarKomparasi from "@/components/BarKomparasi";
 
 export const metadata = {
   title: `${toko.nama} - Spesialis Kelinci Hias & Bunny Hotel Jakarta`,
@@ -21,9 +26,48 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "PetStore",
+    name: toko.nama,
+    description: toko.tagline,
+    url: "https://petskarta.com",
+    telephone: `+${toko.nomorWhatsApp}`,
+    priceRange: "Rp35.000 - Rp950.000",
+    openingHours: "Mo-Su 09:00-21:00",
+    aggregateRating: {
+      "@type": "AggregateRating",
+      "ratingValue": String(toko.ratingGoogle || "5.0"),
+      "reviewCount": String(toko.totalUlasanGoogle || "178"),
+    },
+    address: toko.cabang?.map((c) => ({
+      "@type": "PostalAddress",
+      streetAddress: c.alamat,
+      addressLocality: c.nama.includes("Timur") ? "Jakarta Timur" : "Jakarta Selatan",
+      addressRegion: "DKI Jakarta",
+      addressCountry: "ID",
+    })) || [],
+    sameAs: [
+      toko.mediaSosial?.instagramUtama,
+      toko.mediaSosial?.instagramJatinegara,
+      toko.mediaSosial?.instagramKatalog,
+      toko.mediaSosial?.tiktok,
+      toko.mediaSosial?.shopee,
+    ].filter(Boolean),
+  };
+
   return (
-    <html lang="id">
+    <html lang="id" suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("petskarta_theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.classList.add("dark");}}catch(e){}})();`,
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
@@ -38,13 +82,20 @@ export default function RootLayout({ children }) {
         <meta name="apple-mobile-web-app-title" content="Petskarta" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
-      <body className="flex min-h-screen flex-col font-sans antialiased">
-        <KeranjangProvider>
-          <Header />
-          <main className="mx-auto w-full max-w-5xl flex-1 px-4">{children}</main>
-          <Footer />
-          <DrawerKeranjang />
-        </KeranjangProvider>
+      <body className="flex min-h-screen flex-col font-sans antialiased bg-latar text-teks">
+        <FavoritProvider>
+          <KomparasiProvider>
+            <KeranjangProvider>
+              <BannerPengumuman />
+              <Header />
+              <main className="mx-auto w-full max-w-5xl flex-1 px-4">{children}</main>
+              <Footer />
+              <DrawerKeranjang />
+              <BarKomparasi />
+              <AsistenKelinciAI />
+            </KeranjangProvider>
+          </KomparasiProvider>
+        </FavoritProvider>
       </body>
     </html>
   );

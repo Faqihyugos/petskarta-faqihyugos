@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createAuthServerClient } from "@/lib/supabase/server";
+import { ekstrakPrioritas, setPrioritasDeskripsi } from "@/lib/prioritas";
 
 export async function login(prevState, formData) {
   const form = formData instanceof FormData ? formData : prevState;
@@ -93,6 +94,50 @@ export async function gantiPassword(prevState, formData) {
 
 export const updatePassword = gantiPassword;
 
+// US-29: Helper unggah foto ke Supabase Storage dengan validasi tipe dan ukuran
+async function prosesUnggahFoto(supabase, form, defaultFotoUrl) {
+  const berkas = form?.get?.("berkas_foto");
+  if (berkas && typeof berkas === "object" && berkas.size > 0) {
+    const tipe = berkas.type || "";
+    if (!tipe.startsWith("image/")) {
+      throw new Error("Format berkas harus berupa gambar (JPG, PNG, WEBP, atau SVG).");
+    }
+    if (berkas.size > 5 * 1024 * 1024) {
+      throw new Error("Ukuran berkas gambar maksimal 5 MB.");
+    }
+
+    const ekstensi = berkas.name?.split(".").pop() || "jpg";
+    const namaFile = `kelinci-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ekstensi}`;
+
+    try {
+      const buffer = Buffer.from(await berkas.arrayBuffer());
+      const { data, error } = await supabase.storage
+        .from("produk")
+        .upload(namaFile, buffer, {
+          contentType: tipe,
+          upsert: true,
+        });
+
+      if (!error) {
+        const { data: pubData } = supabase.storage
+          .from("produk")
+          .getPublicUrl(namaFile);
+        if (pubData?.publicUrl) {
+          return pubData.publicUrl;
+        }
+      }
+    } catch {
+      // Fallback jika bucket storage belum dibuat di Supabase
+    }
+
+    // Fallback data URL agar gambar tetap tersimpan dan tampil
+    const buffer = Buffer.from(await berkas.arrayBuffer());
+    return `data:${tipe};base64,${buffer.toString("base64")}`;
+  }
+
+  return defaultFotoUrl;
+}
+
 export async function tambahProduk(prevState, formData) {
   const form = formData instanceof FormData ? formData : prevState;
   const nama = form?.get?.("nama")?.toString()?.trim();
@@ -124,6 +169,13 @@ export async function tambahProduk(prevState, formData) {
     return { error: "Anda harus login terlebih dahulu untuk menambah produk." };
   }
 
+  let finalFotoUrl = foto_url;
+  try {
+    finalFotoUrl = await prosesUnggahFoto(supabase, form, foto_url);
+  } catch (err) {
+    return { error: err.message };
+  }
+
   // Format status, harga coret, dan badge ke dalam deskripsi tanpa merusak skema tabel
   let finalDeskripsi = deskripsi || "";
   finalDeskripsi = finalDeskripsi
@@ -151,7 +203,7 @@ export async function tambahProduk(prevState, formData) {
     nama,
     harga,
     kategori,
-    foto_url,
+    foto_url: finalFotoUrl,
     deskripsi: finalDeskripsi || null,
   };
 
@@ -213,6 +265,13 @@ export async function ubahProduk(idOrPrevState, formDataOrPrevState, maybeFormDa
     return { error: "Anda harus login terlebih dahulu untuk mengubah produk." };
   }
 
+  let finalFotoUrl = foto_url;
+  try {
+    finalFotoUrl = await prosesUnggahFoto(supabase, form, foto_url);
+  } catch (err) {
+    return { error: err.message };
+  }
+
   // Format status, harga coret, dan badge ke dalam deskripsi tanpa merusak skema tabel
   let finalDeskripsi = deskripsi || "";
   finalDeskripsi = finalDeskripsi
@@ -242,7 +301,7 @@ export async function ubahProduk(idOrPrevState, formDataOrPrevState, maybeFormDa
       nama,
       harga,
       kategori,
-      foto_url,
+      foto_url: finalFotoUrl,
       deskripsi: finalDeskripsi || null,
     })
     .eq("id", id);
@@ -304,6 +363,66 @@ export async function hapusProduk(idOrPrevState, maybeFormData) {
 }
 
 export const deleteProduk = hapusProduk;
+
+// US-32: Sembunyikan Kelinci Teradopsi / Arsip Layanan
+export async function toggleArsipProduk(id) {
+  if (!id) return { error: "ID produk tidak valid." };
+
+  const supabase = await createAuthServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Anda harus login terlebih dahulu." };
+
+  const { data: produk } = await supabase
+    .from("produk")
+    .select("deskripsi")
+    .eq("id", id)
+    .single();
+
+  if (!produk) return { error: "Produk tidak ditemukan." };
+
+  let desk = produk.deskripsi || "";
+  const isArsip = desk.includes("[STATUS:ARSIP]");
+  if (isArsip) {
+    desk = desk.replace(/\[STATUS:ARSIP\]/g, "").trim();
+  } else {
+    desk = desk ? `${desk}\n[STATUS:ARSIP]` : "[STATUS:ARSIP]";
+  }
+
+  await supabase.from("produk").update({ deskripsi: desk }).eq("id", id);
+  revalidatePath("/admin");
+  revalidatePath("/");
+  return { success: true, isArsip: !isArsip };
+}
+
+// US-47: Atur Urutan Tampil Prioritas Katalog
+export async function ubahPrioritasProduk(id, delta) {
+  if (!id) return { error: "ID tidak valid." };
+
+  const supabase = await createAuthServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Akses ditolak: Hanya admin." };
+
+  const { data: produk } = await supabase
+    .from("produk")
+    .select("deskripsi, nama")
+    .eq("id", id)
+    .single();
+
+  if (!produk) return { error: "Produk tidak ditemukan." };
+
+  const pLama = ekstrakPrioritas(produk.deskripsi);
+  const pBaru = pLama + delta;
+  const deskBaru = setPrioritasDeskripsi(produk.deskripsi, pBaru);
+
+  await supabase.from("produk").update({ deskripsi: deskBaru }).eq("id", id);
+  revalidatePath("/admin");
+  revalidatePath("/");
+  return { success: true, prioritas: pBaru };
+}
 
 /**
  * US-14: Generator Deskripsi Kelinci & Layanan Berbasis AI

@@ -25,19 +25,64 @@ export default function TombolWhatsApp({ produk }) {
   const [tanggalSelesai, setTanggalSelesai] = useState("");
   const [catatan, setCatatan] = useState("");
 
+  // US-48: Struktur Varian Layanan & Kamar Hotel
+  const daftarVarian = useMemo(() => {
+    const match = produk.deskripsi?.match(/\[VARIAN:([^\]]+)\]/i);
+    if (match) {
+      const items = match[1].split("|");
+      return items.map((item) => {
+        const [n, h] = item.split("=");
+        const selisih = parseInt(h?.replace(/[^0-9-]/g, "") || "0", 10);
+        return { nama: n.trim(), selisihHarga: isNaN(selisih) ? 0 : selisih };
+      });
+    }
+
+    if (isHotel) {
+      return [
+        { nama: "Kamar Standard (Exhaust Fan)", selisihHarga: 0 },
+        { nama: "Kamar Deluxe (Full AC)", selisihHarga: 15000 },
+        { nama: "Kamar VIP (Full AC + CCTV 24 Jam)", selisihHarga: 30000 },
+      ];
+    }
+
+    const isGrooming =
+      produk.kategori?.toLowerCase().includes("grooming") ||
+      produk.kategori?.toLowerCase().includes("perawatan") ||
+      produk.nama?.toLowerCase().includes("scabies");
+    if (isGrooming) {
+      return [
+        { nama: "Paket Standar Sehat", selisihHarga: 0 },
+        { nama: "Paket Treatment Jamur & Kutu", selisihHarga: 25000 },
+        { nama: "Paket Scabies Healer Medis Lengkap", selisihHarga: 45000 },
+      ];
+    }
+
+    return null;
+  }, [produk, isHotel]);
+
+  const [varianDipilih, setVarianDipilih] = useState(
+    daftarVarian ? daftarVarian[0] : null
+  );
+
+  const hargaAkhir = produk.harga + (varianDipilih?.selisihHarga || 0);
+
   const cabangTerpilih =
     cabangList.find((c) => c.id === cabangId) || cabangList[0];
   const nomorWhatsApp = cabangTerpilih?.nomorWhatsApp || toko.nomorWhatsApp;
   const namaCabang = cabangTerpilih?.nama || toko.nama;
 
   const pesanWhatsApp = useMemo(() => {
-    const hargaFormatted = formatRupiah(produk.harga);
+    const hargaFormatted = formatRupiah(hargaAkhir);
+    const teksVarian = varianDipilih
+      ? `- Varian Dipilih: ${varianDipilih.nama} (${hargaFormatted})\n`
+      : "";
 
     // US-19: Format pesan daftar tunggu jika status penuh/teradopsi
     if (!tersedia) {
       return (
         `Halo Admin Petskarta (${namaCabang}),\n` +
         `Saya tertarik dengan: ${produk.nama} (${hargaFormatted}).\n` +
+        teksVarian +
         `Karena statusnya saat ini [${label}], saya ingin berkonsultasi untuk masuk ke daftar tunggu (waiting list) apabila tersedia slot/jadwal berikutnya.\n` +
         `- Rencana/Jadwal: ${tanggal || "Menyesuaikan"}\n` +
         `- Catatan Kebutuhan Khusus: ${catatan.trim() || "-"}\n` +
@@ -53,7 +98,9 @@ export default function TombolWhatsApp({ produk }) {
       return (
         `Halo Admin Petskarta (${namaCabang}),\n` +
         `Saya ingin melakukan reservasi Bunny Hotel:\n` +
-        `- Paket: ${produk.nama} (${hargaFormatted})\n` +
+        `- Paket: ${produk.nama}\n` +
+        teksVarian +
+        `- Total Tarif: ${hargaFormatted}\n` +
         `- Jadwal: ${jadwalStr}\n` +
         `- Catatan Kebutuhan Khusus: ${catatan.trim() || "-"}\n` +
         `Mohon info ketersediaan slot kamar. Terima kasih!`
@@ -66,6 +113,7 @@ export default function TombolWhatsApp({ produk }) {
         `Halo Admin Petskarta (${namaCabang}),\n` +
         `Saya tertarik untuk mengadopsi kelinci:\n` +
         `- Ras/Nama: ${produk.nama}\n` +
+        teksVarian +
         `- Harga: ${hargaFormatted}\n` +
         `- Rencana/Jadwal: ${tanggal || "Segera"}\n` +
         `- Catatan Kebutuhan Khusus: ${catatan.trim() || "-"}\n` +
@@ -76,16 +124,47 @@ export default function TombolWhatsApp({ produk }) {
     return (
       `Halo Admin Petskarta (${namaCabang}),\n` +
       `Saya ingin memesan / reservasi:\n` +
-      `- Layanan: ${produk.nama} (${hargaFormatted})\n` +
+      `- Layanan: ${produk.nama}\n` +
+      teksVarian +
+      `- Total Tarif: ${hargaFormatted}\n` +
       `- Jadwal: ${tanggal || "Sesuai konfirmasi"}\n` +
       `- Catatan Kebutuhan Khusus: ${catatan.trim() || "-"}\n` +
       `Mohon info jadwal dan ketersediaan. Terima kasih!`
     );
-  }, [produk, namaCabang, isHotel, tersedia, label, tanggal, tanggalSelesai, catatan]);
+  }, [
+    produk,
+    namaCabang,
+    isHotel,
+    tersedia,
+    label,
+    tanggal,
+    tanggalSelesai,
+    catatan,
+    varianDipilih,
+    hargaAkhir,
+  ]);
 
   const urlWhatsApp = `https://wa.me/${nomorWhatsApp}?text=${encodeURIComponent(
     pesanWhatsApp
   )}`;
+
+  // US-40: Pelacakan klik booking secara asinkron tanpa menunda pengguna
+  const handleCatatKlik = () => {
+    try {
+      fetch("/api/analitik/klik-booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          produkId: produk.id,
+          namaLayanan: produk.nama,
+          kategori: produk.kategori,
+          cabangTujuan: namaCabang,
+        }),
+      });
+    } catch {
+      // Abaikan jika offline
+    }
+  };
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl border border-garis bg-permukaan/50 p-4 sm:p-5">
@@ -103,6 +182,51 @@ export default function TombolWhatsApp({ produk }) {
       {!tersedia && (
         <div className="rounded-xl border border-garis bg-permukaan p-3 text-xs font-medium text-teks-lembut">
           Item ini berstatus <strong className="text-bahaya">{label}</strong>. Tombol pemesanan dialihkan ke konsultasi daftar tunggu (waiting list).
+        </div>
+      )}
+
+      {/* Pilihan Varian Paket Layanan / Kamar (US-48) */}
+      {daftarVarian && (
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-semibold text-teks">
+              Pilih Varian Paket / Fasilitas
+            </label>
+            <span className="text-xs font-extrabold text-harga">
+              Tarif: {formatRupiah(hargaAkhir)}
+            </span>
+          </div>
+          <div className="grid gap-2">
+            {daftarVarian.map((v, i) => {
+              const aktif = varianDipilih?.nama === v.nama;
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setVarianDipilih(v)}
+                  className={`flex items-center justify-between rounded-xl border p-2.5 text-xs text-left transition-all ${
+                    aktif
+                      ? "border-utama bg-utama/10 text-teks font-bold shadow-xs"
+                      : "border-garis bg-latar text-teks-lembut hover:border-utama/50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`h-2.5 w-2.5 rounded-full ${
+                        aktif ? "bg-utama" : "border border-garis bg-latar"
+                      }`}
+                    />
+                    <span>{v.nama}</span>
+                  </div>
+                  <span className="font-semibold text-teks">
+                    {v.selisihHarga > 0
+                      ? `+${formatRupiah(v.selisihHarga)}`
+                      : "Tarif Dasar"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -186,6 +310,7 @@ export default function TombolWhatsApp({ produk }) {
         href={urlWhatsApp}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={handleCatatKlik}
         className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3 font-semibold text-white shadow-sm transition ${
           !tersedia
             ? "bg-teks hover:bg-teks/90"
