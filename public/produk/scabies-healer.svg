@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="Foto: Scabies Healer">
+  <rect width="600" height="600" fill="#f0f7ff"/>
+  <circle cx="300" cy="240" r="140" fill="#0284c7" opacity="0.12"/>
+  <g transform="translate(300, 235) scale(1.1)">
+    <!-- Medical Shield -->
+    <path d="M0,-75 C45,-75 60,-65 60,-35 C60,25 35,65 0,85 C-35,65 -60,25 -60,-35 C-60,-65 -45,-75 0,-75 Z" fill="#0284c7"/>
+    <!-- Inner Cross -->
+    <path d="M-12,-35 L12,-35 L12,-12 L35,-12 L35,12 L12,12 L12,35 L-12,35 L-12,12 L-35,12 L-35,-12 L-12,-12 Z" fill="#ffffff"/>
+  </g>
+  <text x="300" y="475" text-anchor="middle" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="44" font-weight="800" fill="#1b2420">Scabies Healer</text>
+  <text x="300" y="525" text-anchor="middle" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="22" font-weight="600" fill="#0369a1">Pengobatan Jamur &amp; Kutu Tuntas • Petskarta</text>
+</svg>

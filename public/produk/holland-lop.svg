@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="Foto: Holland Lop">
+  <rect width="600" height="600" fill="#fcf4eb"/>
+  <circle cx="300" cy="240" r="140" fill="#d97706" opacity="0.12"/>
+  <g transform="translate(300, 240) scale(1.1)">
+    <!-- Floppy ears -->
+    <path d="M-55,-30 C-95,-10 -90,70 -65,85 C-45,95 -40,40 -40,10 Z" fill="#b45309"/>
+    <path d="M55,-30 C95,-10 90,70 65,85 C45,95 40,40 40,10 Z" fill="#b45309"/>
+    <!-- Head -->
+    <ellipse cx="0" cy="15" rx="55" ry="50" fill="#d97706"/>
+    <!-- Cheeks & Muzzle -->
+    <ellipse cx="0" cy="35" rx="32" ry="24" fill="#fef3c7"/>
+    <!-- Eyes -->
+    <circle cx="-22" cy="12" r="7" fill="#1b2420"/>
+    <circle cx="22" cy="12" r="7" fill="#1b2420"/>
+    <circle cx="-20" cy="10" r="2.5" fill="#ffffff"/>
+    <circle cx="24" cy="10" r="2.5" fill="#ffffff"/>
+    <!-- Nose & Mouth -->
+    <path d="M-6,30 L6,30 L0,36 Z" fill="#b45309"/>
+    <path d="M0,36 C-4,44 -12,44 -14,40 M0,36 C4,44 12,44 14,40" stroke="#78350f" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  </g>
+  <text x="300" y="475" text-anchor="middle" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="44" font-weight="800" fill="#1b2420">Holland Lop</text>
+  <text x="300" y="525" text-anchor="middle" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="22" font-weight="600" fill="#b45309">Kelinci Hias Siap Adopsi • Petskarta</text>
+</svg>

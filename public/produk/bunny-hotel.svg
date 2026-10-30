@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" role="img" aria-label="Foto: Bunny Hotel">
+  <rect width="600" height="600" fill="#f1f8f5"/>
+  <circle cx="300" cy="240" r="140" fill="#1f6b4f" opacity="0.12"/>
+  <g transform="translate(300, 235) scale(1.05)">
+    <!-- Hotel / House Base -->
+    <path d="M-60,50 L-60,-20 L0,-70 L60,-20 L60,50 Z" fill="#1f6b4f"/>
+    <!-- Roof trim -->
+    <path d="M-70,-15 L0,-75 L70,-15" stroke="#154d39" stroke-width="8" stroke-linecap="round" fill="none"/>
+    <!-- Doorway -->
+    <path d="M-22,50 L-22,10 C-22,-2 22,-2 22,10 L22,50 Z" fill="#f1f8f5"/>
+    <!-- Bunny silhouette in doorway -->
+    <ellipse cx="0" cy="32" rx="12" ry="10" fill="#1f6b4f"/>
+    <circle cx="0" cy="18" r="7" fill="#1f6b4f"/>
+    <ellipse cx="-3" cy="9" rx="2" ry="5" fill="#1f6b4f"/>
+    <ellipse cx="3" cy="9" rx="2" ry="5" fill="#1f6b4f"/>
+    <!-- AC snowflake badge -->
+    <circle cx="-42" cy="-45" r="16" fill="#ffffff" stroke="#1f6b4f" stroke-width="2"/>
+    <text x="-42" y="-39" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#1f6b4f">❄</text>
+    <!-- CCTV camera badge -->
+    <circle cx="42" cy="-45" r="16" fill="#ffffff" stroke="#1f6b4f" stroke-width="2"/>
+    <text x="42" y="-39" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1f6b4f">📹</text>
+  </g>
+  <text x="300" y="475" text-anchor="middle" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="44" font-weight="800" fill="#1b2420">Bunny Hotel</text>
+  <text x="300" y="525" text-anchor="middle" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="22" font-weight="600" fill="#1f6b4f">Penitipan AC &amp; Pantauan CCTV • Petskarta</text>
+</svg>
