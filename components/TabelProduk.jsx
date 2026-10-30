@@ -1,5 +1,8 @@
+"use client";
+
 import { formatRupiah, formatTanggal } from "@/lib/format";
 import Tombol from "@/components/Tombol";
+import { hapusProduk } from "@/app/admin/actions";
 
 export default function TabelProduk({ daftarProduk = [] }) {
   if (!daftarProduk || daftarProduk.length === 0) {
@@ -44,13 +47,22 @@ export default function TabelProduk({ daftarProduk = [] }) {
               </td>
               <td className="px-4 py-3">
                 <div className="flex justify-end gap-2">
-                  {/* US-09 dan US-10 (bonus): ubah dan hapus produk */}
                   <Tombol href={`/admin/produk/${produk.id}/ubah`} varian="garis">
                     Ubah
                   </Tombol>
-                  <Tombol type="button" varian="bahaya">
-                    Hapus
-                  </Tombol>
+                  <form
+                    action={hapusProduk}
+                    onSubmit={(e) => {
+                      if (!window.confirm(`Apakah Anda yakin ingin menghapus "${produk.nama}"?`)) {
+                        e.preventDefault();
+                      }
+                    }}
+                  >
+                    <input type="hidden" name="id" value={produk.id} />
+                    <Tombol type="submit" varian="bahaya">
+                      Hapus
+                    </Tombol>
+                  </form>
                 </div>
               </td>
             </tr>

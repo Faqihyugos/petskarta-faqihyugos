@@ -208,6 +208,51 @@ export async function ubahProduk(idOrPrevState, formDataOrPrevState, maybeFormDa
 
 export const updateProduk = ubahProduk;
 
+export async function hapusProduk(idOrPrevState, maybeFormData) {
+  let id;
+  const form =
+    maybeFormData instanceof FormData
+      ? maybeFormData
+      : idOrPrevState instanceof FormData
+      ? idOrPrevState
+      : null;
+
+  if (form) {
+    id = form.get("id");
+  } else if (typeof idOrPrevState === "string" || typeof idOrPrevState === "number") {
+    id = idOrPrevState;
+  } else if (idOrPrevState?.id) {
+    id = idOrPrevState.id;
+  }
+
+  if (!id) {
+    return { error: "ID produk tidak valid." };
+  }
+
+  // Verifikasi login admin di server
+  const supabase = await createAuthServerClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return { error: "Anda harus login terlebih dahulu untuk menghapus produk." };
+  }
+
+  const { error } = await supabase.from("produk").delete().eq("id", id);
+
+  if (error) {
+    return { error: `Gagal menghapus produk: ${error.message}` };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/");
+  return { success: true };
+}
+
+export const deleteProduk = hapusProduk;
+
 /**
  * Memverifikasi status login admin di server.
  * Mengembalikan data user admin jika terautentikasi, atau null jika tidak valid.
