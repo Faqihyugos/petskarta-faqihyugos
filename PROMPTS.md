@@ -180,7 +180,7 @@ Tambahkan tombol generator deskripsi otomatis berbasis AI (Google Gemini API) di
 - Tombol AI di form admin otomatis mengisi kolom deskripsi dengan teks profesional yang ramah hewan dan dapat diedit kembali oleh admin.
 
 **Perbaikan:**
-- Menambahkan fallback prompt cerdas jika API sedang sibuk atau kuota terbatas agar admin tetap memperoleh template deskripsi yang rapi.
+- Menghubungkan variabel environment `LLM_GEMINI_API_KEY` dan menerapkan multi-model fallback cascade (`gemini-3.1-flash-lite-preview`, `gemini-3.5-flash`, `gemini-3-flash-preview`, `gemini-2.5-flash`) sehingga pembuatan copy deskripsi produk selalu berhasil stabil.
 
 ## US-15 Urutkan Katalog Petskarta
 
@@ -618,7 +618,7 @@ Buat asisten chat interaktif berbasis Google Gemini AI di situs publik untuk mel
 - Dilengkapi pembatasan panjang teks dan penanganan timeout/error secara elegan.
 
 **Perbaikan:**
-- Menambahkan proteksi rate limiting di sisi server untuk mencegah spamming dan pembengkakan kuota token AI.
+- Menghubungkan variabel environment `LLM_GEMINI_API_KEY` dari server, menerapkan model cascade anti-downtime, serta menambahkan proteksi rate limiting di sisi server untuk mencegah spamming dan pembengkakan kuota token AI.
 
 ## US-51 Tampilan Seluruh Katalog Admin & Produk Terbaru Paling Atas [SENDIRI]
 

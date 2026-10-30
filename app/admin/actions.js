@@ -482,7 +482,11 @@ export async function generateDeskripsiAI(params) {
     return { error: "Anda harus login terlebih dahulu." };
   }
 
-  const geminiApiKey = process.env.GEMINI_API_KEY;
+  const geminiApiKey =
+    process.env.LLM_GEMINI_API_KEY ||
+    process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_API_KEY ||
+    process.env.GOOGLE_AI_API_KEY;
 
   if (geminiApiKey) {
     try {
@@ -494,28 +498,43 @@ Buatlah 1-2 paragraf deskripsi produk/layanan yang persuasif, profesional, dan i
 
 Sertakan karakteristik, keunggulan fasilitas, atau saran perawatan yang relevan. Buat sebagai narasi mengalir yang elegan dan siap dibaca calon adopter/pelanggan tanpa bullet point panjang atau simbol asterik berlebihan.`;
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [{ text: prompt }],
-              },
-            ],
-          }),
-        }
-      );
+      const candidateModels = [
+        "gemini-3.1-flash-lite-preview",
+        "gemini-3.5-flash",
+        "gemini-3-flash-preview",
+        "gemini-2.5-flash",
+        "gemini-flash-latest",
+        "gemini-1.5-flash",
+      ];
 
-      if (response.ok) {
-        const data = await response.json();
-        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-        if (text) {
-          return { success: true, deskripsi: text };
+      for (const model of candidateModels) {
+        try {
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    parts: [{ text: prompt }],
+                  },
+                ],
+              }),
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+            if (text) {
+              return { success: true, deskripsi: text };
+            }
+          }
+        } catch {
+          // Lanjut ke model berikutnya jika gagal
         }
       }
     } catch {
