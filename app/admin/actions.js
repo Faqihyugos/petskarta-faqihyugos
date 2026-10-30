@@ -142,6 +142,72 @@ export async function tambahProduk(prevState, formData) {
 
 export const createProduk = tambahProduk;
 
+export async function ubahProduk(idOrPrevState, formDataOrPrevState, maybeFormData) {
+  let id, form;
+  if (maybeFormData instanceof FormData) {
+    id = idOrPrevState;
+    form = maybeFormData;
+  } else {
+    form = formDataOrPrevState instanceof FormData ? formDataOrPrevState : idOrPrevState;
+    id =
+      (form instanceof FormData ? form.get("id") : form?.id) ||
+      (typeof idOrPrevState === "string" || typeof idOrPrevState === "number" ? idOrPrevState : null);
+  }
+
+  const nama = (form instanceof FormData ? form.get("nama") : form?.nama)?.toString()?.trim();
+  const hargaRaw = (form instanceof FormData ? form.get("harga") : form?.harga)?.toString()?.trim();
+  const kategori = (form instanceof FormData ? form.get("kategori") : form?.kategori)?.toString()?.trim() || null;
+  const foto_url = (form instanceof FormData ? form.get("foto_url") : form?.foto_url)?.toString()?.trim() || null;
+  const deskripsi = (form instanceof FormData ? form.get("deskripsi") : form?.deskripsi)?.toString()?.trim() || null;
+
+  if (!id) {
+    return { error: "ID produk tidak valid." };
+  }
+
+  if (!nama) {
+    return { error: "Nama produk wajib diisi." };
+  }
+
+  const harga = parseInt(hargaRaw, 10);
+  if (isNaN(harga) || harga < 0) {
+    return { error: "Harga produk harus berupa angka positif." };
+  }
+
+  // Verifikasi login admin di server
+  const supabase = await createAuthServerClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return { error: "Anda harus login terlebih dahulu untuk mengubah produk." };
+  }
+
+  const { error } = await supabase
+    .from("produk")
+    .update({
+      nama,
+      harga,
+      kategori,
+      foto_url,
+      deskripsi,
+    })
+    .eq("id", id);
+
+  if (error) {
+    return { error: `Gagal memperbarui produk: ${error.message}` };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath(`/admin/produk/${id}/ubah`);
+  revalidatePath(`/produk/${id}`);
+  revalidatePath("/");
+  redirect("/admin");
+}
+
+export const updateProduk = ubahProduk;
+
 /**
  * Memverifikasi status login admin di server.
  * Mengembalikan data user admin jika terautentikasi, atau null jika tidak valid.
