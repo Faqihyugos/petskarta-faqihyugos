@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { createAuthServerClient } from "@/lib/supabase/server";
 
 export async function login(prevState, formData) {
@@ -91,6 +92,55 @@ export async function gantiPassword(prevState, formData) {
 }
 
 export const updatePassword = gantiPassword;
+
+export async function tambahProduk(prevState, formData) {
+  const form = formData instanceof FormData ? formData : prevState;
+  const nama = form?.get?.("nama")?.toString()?.trim();
+  const hargaRaw = form?.get?.("harga")?.toString()?.trim();
+  const kategori = form?.get?.("kategori")?.toString()?.trim() || null;
+  const foto_url = form?.get?.("foto_url")?.toString()?.trim() || null;
+  const deskripsi = form?.get?.("deskripsi")?.toString()?.trim() || null;
+
+  if (!nama) {
+    return { error: "Nama produk wajib diisi." };
+  }
+
+  const harga = parseInt(hargaRaw, 10);
+  if (isNaN(harga) || harga < 0) {
+    return { error: "Harga produk harus berupa angka positif." };
+  }
+
+  // Verifikasi status login admin di server
+  const supabase = await createAuthServerClient();
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return { error: "Anda harus login terlebih dahulu untuk menambah produk." };
+  }
+
+  const { error } = await supabase.from("produk").insert([
+    {
+      nama,
+      harga,
+      kategori,
+      foto_url,
+      deskripsi,
+    },
+  ]);
+
+  if (error) {
+    return { error: `Gagal menambahkan produk: ${error.message}` };
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/");
+  redirect("/admin");
+}
+
+export const createProduk = tambahProduk;
 
 /**
  * Memverifikasi status login admin di server.
