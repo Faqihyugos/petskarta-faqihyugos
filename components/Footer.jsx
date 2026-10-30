@@ -18,7 +18,15 @@ export default async function Footer() {
           <p className="font-bold text-teks">{namaBisnis}</p>
           <p>{alamat}</p>
           <p>{jamBuka}</p>
-          <div className="mt-2">
+          <div className="mt-1 flex flex-col gap-1">
+            <a
+              href={`https://wa.me/${toko.nomorWhatsApp}?text=${encodeURIComponent(`Halo ${namaBisnis}, saya ingin pesan via WhatsApp.`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-utama underline underline-offset-4 hover:text-utama-gelap"
+            >
+              Pesan via WhatsApp: +{toko.nomorWhatsApp}
+            </a>
             <Link
               href="/cabang"
               className="font-semibold text-utama underline underline-offset-4 hover:text-utama-gelap"

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { formatRupiah } from "@/lib/format";
+import { toko } from "@/lib/toko";
 import { cekKetersediaan } from "@/lib/ketersediaan";
 import { ekstrakPromoDanBadge } from "@/lib/promo";
 import TombolTambahKeranjang from "@/components/TombolTambahKeranjang";
@@ -89,10 +90,25 @@ export default function KartuProduk({ produk }) {
             )}
           </div>
 
-          {/* Quick Add to Cart (US-21) */}
-          {tersedia && (
-            <TombolTambahKeranjang produk={produk} varian="kartu" />
-          )}
+          {/* Tombol Pesan via WhatsApp & Quick Add to Cart */}
+          <div className="flex items-center gap-1.5">
+            {tersedia && (
+              <a
+                href={`https://wa.me/${toko.nomorWhatsApp}?text=${encodeURIComponent(
+                  `Halo ${toko.nama}, saya ingin pesan: ${produk.nama} seharga ${formatRupiah(produk.harga)}.`
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 rounded-lg border border-utama/30 bg-utama/10 px-2.5 py-1 text-xs font-semibold text-utama hover:bg-utama hover:text-white transition-colors"
+                title="Pesan via WhatsApp"
+              >
+                Pesan via WhatsApp
+              </a>
+            )}
+            {tersedia && (
+              <TombolTambahKeranjang produk={produk} varian="kartu" />
+            )}
+          </div>
         </div>
       </div>
     </div>

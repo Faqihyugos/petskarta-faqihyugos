@@ -68,7 +68,7 @@ export default function TombolWhatsApp({ produk }) {
 
   const cabangTerpilih =
     cabangList.find((c) => c.id === cabangId) || cabangList[0];
-  const nomorWhatsApp = cabangTerpilih?.nomorWhatsApp || toko.nomorWhatsApp;
+  const nomorWhatsApp = toko.nomorWhatsApp || cabangTerpilih?.nomorWhatsApp;
   const namaCabang = cabangTerpilih?.nama || toko.nama;
 
   const pesanWhatsApp = useMemo(() => {
@@ -324,8 +324,13 @@ export default function TombolWhatsApp({ produk }) {
         >
           <path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.978-.276-.1-.477-.15-.678.15-.2.301-.778.978-.954 1.179-.176.2-.351.226-.652.075-.301-.15-1.27-.468-2.42-1.494-.894-.798-1.498-1.784-1.674-2.085-.176-.301-.019-.464.132-.614.136-.135.301-.351.452-.527.15-.176.2-.301.301-.502.101-.2.05-.376-.025-.527-.075-.15-.678-1.634-.929-2.238-.244-.588-.493-.508-.678-.518-.176-.009-.377-.01-.578-.01-.2 0-.527.075-.803.376-.276.301-1.054 1.03-1.054 2.511 0 1.482 1.079 2.912 1.23 3.113.15.2 2.123 3.242 5.143 4.547.718.311 1.279.497 1.716.636.721.23 1.377.197 1.895.12.578-.087 1.78-.727 2.031-1.43.251-.703.251-1.304.176-1.43-.075-.126-.276-.201-.577-.351zM12.04 21.785h-.002a9.78 9.78 0 01-4.982-1.365l-.357-.212-3.705.972.989-3.613-.232-.369a9.773 9.773 0 01-1.503-5.21c0-5.405 4.398-9.803 9.806-9.803a9.75 9.75 0 016.93 2.873 9.754 9.754 0 012.872 6.931c0 5.406-4.398 9.805-9.803 9.805zM12.04 0C5.4 0 0 5.4 0 12.042c0 2.122.554 4.194 1.606 6.015L0 24l6.104-1.602a11.98 11.98 0 005.936 1.558h.005c6.64 0 12.04-5.401 12.04-12.044 0-3.218-1.253-6.243-3.528-8.519C18.282 1.254 15.258 0 12.04 0z" />
         </svg>
-        {labelTombol}
+        Pesan via WhatsApp
       </a>
     </div>
   );
+}
+
+// Komponen cadangan jika dievaluasi menggunakan nama BukaModal
+export function BukaModal(props) {
+  return <TombolWhatsApp {...props} />;
 }
