@@ -16,6 +16,9 @@ export default function NavAdmin() {
       <Link href="/admin/pengaturan" className="font-semibold hover:text-utama">
         Pengaturan Cabang
       </Link>
+      <Link href="/admin/sistem" className="font-semibold hover:text-utama">
+        Sistem &amp; Tema
+      </Link>
       <Link href="/admin/audit-log" className="font-semibold hover:text-utama">
         Audit Trail
       </Link>

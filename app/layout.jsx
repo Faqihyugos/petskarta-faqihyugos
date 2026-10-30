@@ -4,6 +4,7 @@ import Footer from "@/components/Footer";
 import BannerPengumuman from "@/components/BannerPengumuman";
 import AsistenKelinciAI from "@/components/AsistenKelinciAI";
 import { toko } from "@/lib/toko";
+import { ambilPengaturan } from "@/lib/pengaturan";
 import { KeranjangProvider } from "@/context/KeranjangContext";
 import { FavoritProvider } from "@/context/FavoritContext";
 import { KomparasiProvider } from "@/context/KomparasiContext";
@@ -25,16 +26,20 @@ export const metadata = {
   },
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const pengaturan = await ambilPengaturan();
+  const namaBisnis = pengaturan.namaBisnis || toko.nama;
+  const tagline = pengaturan.tagline || toko.tagline;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "PetStore",
-    name: toko.nama,
-    description: toko.tagline,
+    name: namaBisnis,
+    description: tagline,
     url: "https://petskarta.com",
-    telephone: `+${toko.nomorWhatsApp}`,
+    telephone: `+${pengaturan.nomorWaCabang1 || toko.nomorWhatsApp}`,
     priceRange: "Rp35.000 - Rp950.000",
-    openingHours: "Mo-Su 09:00-21:00",
+    openingHours: pengaturan.jamBuka || "Mo-Su 09:00-21:00",
     aggregateRating: {
       "@type": "AggregateRating",
       "ratingValue": String(toko.ratingGoogle || "5.0"),
@@ -56,9 +61,20 @@ export default function RootLayout({ children }) {
     ].filter(Boolean),
   };
 
+  const styleTemaDinamis = `
+    :root {
+      --color-utama: ${pengaturan.warnaUtama || "#1f6b4f"};
+      --color-utama-gelap: ${pengaturan.warnaUtamaGelap || "#154d39"};
+      --color-harga: ${pengaturan.warnaHarga || "#7a4e09"};
+      --color-harga-latar: ${pengaturan.warnaHargaLatar || "#fbefd8"};
+    }
+  `;
+
   return (
     <html lang="id" suppressHydrationWarning>
       <head>
+        {/* US-52: Injeksi Skema Tema & White-Label Dinamis */}
+        <style dangerouslySetInnerHTML={undefined}>{styleTemaDinamis}</style>
         {/* K-7: Skrip tema & Structured Data aman tanpa innerHTML berbahaya */}
         <script src="/theme.js" />
         <script type="application/ld+json">
@@ -71,11 +87,11 @@ export default function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
         />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#1f6b4f" />
+        <meta name="theme-color" content={pengaturan.warnaUtama || "#1f6b4f"} />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Petskarta" />
+        <meta name="apple-mobile-web-app-title" content={namaBisnis} />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
       <body className="flex min-h-screen flex-col font-sans antialiased bg-latar text-teks">

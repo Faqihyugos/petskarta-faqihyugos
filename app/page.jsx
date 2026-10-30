@@ -4,6 +4,7 @@ import TerakhirDilihat from "@/components/TerakhirDilihat";
 import TrustCenter from "@/components/TrustCenter";
 import { ambilUlasanPublik } from "@/lib/ulasan";
 import { ekstrakPrioritas } from "@/lib/prioritas";
+import { ambilPengaturan } from "@/lib/pengaturan";
 import { createServerClient } from "@/lib/supabase/server";
 import { toko } from "@/lib/toko";
 
@@ -61,7 +62,10 @@ export default async function HalamanKatalog({ searchParams }) {
     pesanError = err.message || "Terjadi kesalahan saat memuat data produk.";
   }
 
-  const ulasanList = await ambilUlasanPublik();
+  const [ulasanList, pengaturan] = await Promise.all([
+    ambilUlasanPublik(),
+    ambilPengaturan(),
+  ]);
   const totalHalaman = Math.max(1, Math.ceil(totalData / pageSize));
 
   return (
@@ -75,10 +79,14 @@ export default async function HalamanKatalog({ searchParams }) {
           </Link>
         </div>
         <h1 className="max-w-2xl text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-          {toko.nama}
+          {pengaturan?.namaBisnis || toko.nama}
         </h1>
-        <p className="mt-3 max-w-xl text-lg text-teks-lembut">{toko.tagline}</p>
-        <p className="mt-4 text-sm text-teks-lembut">{toko.jamBuka}</p>
+        <p className="mt-3 max-w-xl text-lg text-teks-lembut">
+          {pengaturan?.tagline || toko.tagline}
+        </p>
+        <p className="mt-4 text-sm text-teks-lembut">
+          {pengaturan?.jamBuka || toko.jamBuka}
+        </p>
       </section>
 
       <section aria-labelledby="judul-produk" className="flex flex-col gap-5">

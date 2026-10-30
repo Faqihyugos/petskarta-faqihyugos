@@ -629,3 +629,17 @@ Kriteria selesai:
 - Query data produk di panel admin diurutkan berdasarkan item terbaru terlebih dahulu (`created_at` DESC dan `id` DESC) sehingga produk yang baru ditambahkan langsung berada di urutan teratas. (3 poin)
 - Filter pencarian cepat tetap berfungsi menyaring seluruh daftar produk secara instan dan menampilkan jumlah total item yang ditemukan. (3 poin)
 
+### US-52 Sistem White-Label & Manajemen Tema Multi-Bisnis
+
+Sebagai pemilik platform atau calon pembeli sistem, saya ingin memiliki menu khusus di panel admin untuk mengubah identitas branding bisnis (nama toko, slogan, logo/ikon, footer) dan mengganti skema warna tema secara dinamis, supaya platform ini dapat langsung digunakan untuk berbagai macam jenis usaha lain tanpa perlu mengubah kode sumber.
+
+Bernilai 15 poin.
+
+Kriteria selesai:
+
+- Tersedia menu "Sistem & Tema" di navigasi panel admin (`/admin/sistem`). (3 poin)
+- Admin dapat memperbarui nama bisnis, slogan, logo/emoji brand, dan teks hak cipta footer. (4 poin)
+- Admin dapat memilih preset warna siap pakai (6 palet tema) atau memilih warna kustom menggunakan color picker dengan live preview interaktif. (4 poin)
+- Seluruh perubahan tema dan branding tersimpan di server dan diterapkan secara real-time ke seluruh halaman publik dan admin melalui injeksi CSS variables. (4 poin)
+
+

@@ -1,14 +1,23 @@
 import Link from "next/link";
 import { toko } from "@/lib/toko";
+import { ambilPengaturan } from "@/lib/pengaturan";
 
-export default function Footer() {
+export default async function Footer() {
+  const pengaturan = await ambilPengaturan();
+  const namaBisnis = pengaturan.namaBisnis || toko.nama;
+  const alamat = pengaturan.alamat || toko.alamat;
+  const jamBuka = pengaturan.jamBuka || toko.jamBuka;
+  const teksFooter =
+    pengaturan.teksFooter ||
+    `Melayani pecinta hewan kecil sejak ${toko.sejak} di Jakarta.`;
+
   return (
     <footer className="mt-16 border-t border-garis bg-permukaan">
       <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-8 text-sm text-teks-lembut sm:flex-row sm:justify-between">
         <div className="flex flex-col gap-1.5">
-          <p className="font-bold text-teks">{toko.nama}</p>
-          <p>{toko.alamat}</p>
-          <p>{toko.jamBuka}</p>
+          <p className="font-bold text-teks">{namaBisnis}</p>
+          <p>{alamat}</p>
+          <p>{jamBuka}</p>
           <div className="mt-2">
             <Link
               href="/cabang"
@@ -23,7 +32,7 @@ export default function Footer() {
             Masuk sebagai admin
           </Link>
           <p className="text-xs text-teks-lembut">
-            Melayani pecinta hewan kecil sejak {toko.sejak} di Jakarta.
+            {teksFooter}
           </p>
         </div>
       </div>

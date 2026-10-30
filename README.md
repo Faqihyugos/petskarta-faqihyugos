@@ -74,7 +74,36 @@ Urutan yang disarankan: US-01, US-02, US-03, US-04, US-05, US-06, lalu fitur bon
 
 ## Tentang aplikasi ini
 
-- **Nama usaha:**
-- **Pembuat:**
-- **Link aplikasi:**
+- **Nama usaha:** Petskarta (Katalog Terpadu Adopsi Kelinci Hias, Bunny Hotel, Grooming & Perlengkapan Hewan Kecil Jakarta)
+- **Pembuat:** Faqih Yugo (@faqihyugos)
+- **Link aplikasi:** https://petskarta-faqihyugos.vercel.app
 - **Fitur bonus yang dikerjakan:**
+  - **US-07 sampai US-52 (Seluruh 46 Fitur Bonus Selesai Lengkap):**
+    - Manajemen Katalog Admin Lengkap (US-07, US-08, US-09, US-10, US-31, US-32, US-33, US-34, US-51)
+    - Pengalaman Pengunjung Interaktif: Filter Kategori & Pencarian Instan (US-11), Booking Interaktif Multi-Cabang (US-12), Sorting Server-Side (US-15), Paginasi Efisien (US-16), Rekomendasi Starter Kit (US-17), Galeri Multi-Foto (US-18), Status Stok Real-Time (US-19), Promo & Badge Diskon (US-20)
+    - Multi-Item WhatsApp Shopping Cart (US-21)
+    - Direktori 2 Cabang Resmi Aktif & Hub Medsos (US-22)
+    - Web Share & Salin Tautan (US-23), Wishlist Lokal (US-24), Dark Mode Ramah Mata (US-25)
+    - Optimasi SEO Dinamis & Open Graph (US-26), Schema JSON-LD LocalBusiness & Sitemap XML (US-27), Custom 404 & Skeleton Loading (US-28)
+    - PWA Siap Pasang Layar Ponsel (US-13) & Unggah Foto ke Supabase Storage (US-29)
+    - Generator AI Konten & Asisten Konsultasi Perawatan Kelinci Google Gemini (US-14, US-50)
+    - Dasbor Analitik, Pelacakan Minat Booking WhatsApp, & Produk Populer (US-30, US-40, US-41)
+    - Ekspor & Impor Massal CSV Katalog (US-35, US-46)
+    - Histori Terakhir Dilihat (US-36) & Komparasi Spesifikasi Kelinci 2 Kolom (US-37)
+    - Trust Center Google Reviews 5.0, Form Ulasan Autentik & Panel Moderasi Admin (US-38, US-39)
+    - Banner Pengumuman Musim Libur / Slot Mudik Lebaran (US-42)
+    - Pengaturan Multi-Cabang & Kontak WhatsApp Dinamis dari Admin (US-43)
+    - Manajemen Staf Admin Cabang (US-44) & Audit Trail Kronologis 50 Aktivitas (US-45)
+    - Urutan Prioritas Katalog (US-47) & Varian Paket Layanan Kamar/Grooming (US-48)
+    - Halaman Dinamis Khusus per Kategori `/kategori/[slug]` (US-49)
+    - Tampilan Katalog Admin Tanpa Paginasi & Produk Terbaru Paling Atas (US-51)
+    - Sistem White-Label & Manajemen Tema Multi-Bisnis Dinamis (US-52)
+  - **Keamanan Lanjutan (K-6 sampai K-13):**
+    - K-6 Header Keamanan Lengkap (HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff)
+    - K-7 Bersih dari `dangerouslySetInnerHTML` & `eval` berbahaya
+    - K-8 Rute `/admin` terlindungi dari pengindeksan mesin pencari (`X-Robots-Tag: noindex, nofollow`, `robots.txt`)
+    - K-9 Halaman error aman tanpa membocorkan stack trace internal
+    - K-10 Dependensi bersih tanpa kerentanan kritis (`npm audit` 0 vulnerability)
+    - K-11 Content-Security-Policy (CSP) ketat
+    - K-12 Rate limiting pada percobaan login admin dan pengiriman formulir publik
+    - K-13 Kode bersih tanpa `console.log` data sensitif atau kredensial rahasia
