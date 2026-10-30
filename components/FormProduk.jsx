@@ -21,14 +21,25 @@ export default function FormProduk({ produk = {}, labelTombol, action }) {
       : produk.deskripsi?.includes("[STATUS:TERADOPSI]")
       ? "teradopsi"
       : "tersedia");
+
+  const matchCoret = produk.deskripsi?.match(/\[(CORET|HARGA_ASLI):([0-9.]+)\]/i);
+  const initialHargaCoret = matchCoret ? matchCoret[2].replace(/\./g, "") : "";
+
+  const matchBadge = produk.deskripsi?.match(/\[BADGE:([^\]]+)\]/i);
+  const initialBadge = matchBadge ? matchBadge[1].trim() : "";
+
   const cleanInitialDeskripsi = (produk.deskripsi || "")
-    .replace(/\[STATUS:(PENUH|TERADOPSI)\]/gi, "")
+    .replace(/\[STATUS:(PENUH|TERADOPSI|HABIS)\]/gi, "")
+    .replace(/\[(CORET|HARGA_ASLI):[0-9.]+\]/gi, "")
+    .replace(/\[BADGE:[^\]]+\]/gi, "")
     .trim();
 
   const [nama, setNama] = useState(produk.nama || "");
   const [kategori, setKategori] = useState(produk.kategori || "");
   const [deskripsi, setDeskripsi] = useState(cleanInitialDeskripsi);
   const [status, setStatus] = useState(initialStatus);
+  const [hargaCoret, setHargaCoret] = useState(initialHargaCoret);
+  const [badge, setBadge] = useState(initialBadge);
   const [loadingAI, setLoadingAI] = useState(false);
   const [pesanAI, setPesanAI] = useState(null);
 
@@ -71,14 +82,68 @@ export default function FormProduk({ produk = {}, labelTombol, action }) {
         onChange={(e) => setNama(e.target.value)}
         required
       />
-      <Input
-        label="Harga (Rp)"
-        name="harga"
-        type="number"
-        min="0"
-        defaultValue={produk.harga}
-        required
-      />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Input
+          label="Harga Jual / Promo (Rp)"
+          name="harga"
+          type="number"
+          min="0"
+          defaultValue={produk.harga}
+          required
+        />
+        <Input
+          label="Harga Coret / Asli (Opsional)"
+          name="harga_coret"
+          type="number"
+          min="0"
+          placeholder="Contoh: 120000"
+          value={hargaCoret}
+          onChange={(e) => setHargaCoret(e.target.value)}
+        />
+      </div>
+
+      {/* Badge Promo & Kepercayaan (US-20) */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-semibold text-teks">
+          Badge Promo &amp; Kepercayaan (US-20)
+        </label>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <select
+            value={
+              [
+                "",
+                "Promo Mudik Lebaran",
+                "Fasilitas AC & CCTV",
+                "Garansi Bebas Scabies",
+                "Best Seller",
+              ].includes(badge)
+                ? badge
+                : "custom"
+            }
+            onChange={(e) => {
+              if (e.target.value !== "custom") {
+                setBadge(e.target.value);
+              }
+            }}
+            className="rounded-lg border border-garis bg-latar px-3 py-2.5 text-base text-teks focus:border-utama focus:outline-none"
+          >
+            <option value="">(Otomatis berdasarkan kategori)</option>
+            <option value="Promo Mudik Lebaran">Promo Mudik Lebaran</option>
+            <option value="Fasilitas AC & CCTV">Fasilitas AC &amp; CCTV</option>
+            <option value="Garansi Bebas Scabies">Garansi Bebas Scabies</option>
+            <option value="Best Seller">Best Seller</option>
+            <option value="custom">Kustom / Lainnya...</option>
+          </select>
+          <input
+            type="text"
+            name="badge"
+            placeholder="Tulis badge khusus..."
+            value={badge}
+            onChange={(e) => setBadge(e.target.value)}
+            className="flex-1 rounded-lg border border-garis bg-latar px-3 py-2.5 text-base text-teks placeholder:text-teks-lembut focus:border-utama focus:outline-none"
+          />
+        </div>
+      </div>
       <Input
         label="Kategori"
         name="kategori"

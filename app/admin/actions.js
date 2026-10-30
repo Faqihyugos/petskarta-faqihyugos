@@ -101,6 +101,8 @@ export async function tambahProduk(prevState, formData) {
   const foto_url = form?.get?.("foto_url")?.toString()?.trim() || null;
   const deskripsi = form?.get?.("deskripsi")?.toString()?.trim() || null;
   const status = form?.get?.("status")?.toString()?.trim();
+  const hargaCoretRaw = form?.get?.("harga_coret")?.toString()?.trim();
+  const badge = form?.get?.("badge")?.toString()?.trim();
 
   if (!nama) {
     return { error: "Nama produk wajib diisi." };
@@ -122,13 +124,27 @@ export async function tambahProduk(prevState, formData) {
     return { error: "Anda harus login terlebih dahulu untuk menambah produk." };
   }
 
-  // Format status ke dalam deskripsi tanpa merusak skema tabel
+  // Format status, harga coret, dan badge ke dalam deskripsi tanpa merusak skema tabel
   let finalDeskripsi = deskripsi || "";
-  finalDeskripsi = finalDeskripsi.replace(/\[STATUS:(PENUH|TERADOPSI)\]/gi, "").trim();
+  finalDeskripsi = finalDeskripsi
+    .replace(/\[STATUS:(PENUH|TERADOPSI|HABIS)\]/gi, "")
+    .replace(/\[(CORET|HARGA_ASLI):[0-9.]+\]/gi, "")
+    .replace(/\[BADGE:[^\]]+\]/gi, "")
+    .trim();
+
   if (status === "penuh") {
     finalDeskripsi = finalDeskripsi ? `${finalDeskripsi}\n\n[STATUS:PENUH]` : "[STATUS:PENUH]";
   } else if (status === "teradopsi") {
     finalDeskripsi = finalDeskripsi ? `${finalDeskripsi}\n\n[STATUS:TERADOPSI]` : "[STATUS:TERADOPSI]";
+  }
+
+  const hargaCoretNum = parseInt(hargaCoretRaw, 10);
+  if (!isNaN(hargaCoretNum) && hargaCoretNum > harga) {
+    finalDeskripsi = finalDeskripsi ? `${finalDeskripsi}\n[CORET:${hargaCoretNum}]` : `[CORET:${hargaCoretNum}]`;
+  }
+
+  if (badge) {
+    finalDeskripsi = finalDeskripsi ? `${finalDeskripsi}\n[BADGE:${badge}]` : `[BADGE:${badge}]`;
   }
 
   const payload = {
@@ -170,6 +186,8 @@ export async function ubahProduk(idOrPrevState, formDataOrPrevState, maybeFormDa
   const foto_url = (form instanceof FormData ? form.get("foto_url") : form?.foto_url)?.toString()?.trim() || null;
   const deskripsi = (form instanceof FormData ? form.get("deskripsi") : form?.deskripsi)?.toString()?.trim() || null;
   const status = (form instanceof FormData ? form.get("status") : form?.status)?.toString()?.trim();
+  const hargaCoretRaw = (form instanceof FormData ? form.get("harga_coret") : form?.harga_coret)?.toString()?.trim();
+  const badge = (form instanceof FormData ? form.get("badge") : form?.badge)?.toString()?.trim();
 
   if (!id) {
     return { error: "ID produk tidak valid." };
@@ -195,13 +213,27 @@ export async function ubahProduk(idOrPrevState, formDataOrPrevState, maybeFormDa
     return { error: "Anda harus login terlebih dahulu untuk mengubah produk." };
   }
 
-  // Format status ke dalam deskripsi tanpa merusak skema tabel
+  // Format status, harga coret, dan badge ke dalam deskripsi tanpa merusak skema tabel
   let finalDeskripsi = deskripsi || "";
-  finalDeskripsi = finalDeskripsi.replace(/\[STATUS:(PENUH|TERADOPSI)\]/gi, "").trim();
+  finalDeskripsi = finalDeskripsi
+    .replace(/\[STATUS:(PENUH|TERADOPSI|HABIS)\]/gi, "")
+    .replace(/\[(CORET|HARGA_ASLI):[0-9.]+\]/gi, "")
+    .replace(/\[BADGE:[^\]]+\]/gi, "")
+    .trim();
+
   if (status === "penuh") {
     finalDeskripsi = finalDeskripsi ? `${finalDeskripsi}\n\n[STATUS:PENUH]` : "[STATUS:PENUH]";
   } else if (status === "teradopsi") {
     finalDeskripsi = finalDeskripsi ? `${finalDeskripsi}\n\n[STATUS:TERADOPSI]` : "[STATUS:TERADOPSI]";
+  }
+
+  const hargaCoretNum = parseInt(hargaCoretRaw, 10);
+  if (!isNaN(hargaCoretNum) && hargaCoretNum > harga) {
+    finalDeskripsi = finalDeskripsi ? `${finalDeskripsi}\n[CORET:${hargaCoretNum}]` : `[CORET:${hargaCoretNum}]`;
+  }
+
+  if (badge) {
+    finalDeskripsi = finalDeskripsi ? `${finalDeskripsi}\n[BADGE:${badge}]` : `[BADGE:${badge}]`;
   }
 
   const { error } = await supabase
