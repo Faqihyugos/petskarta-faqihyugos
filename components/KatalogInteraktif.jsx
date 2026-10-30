@@ -1,9 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import KartuProduk from "@/components/KartuProduk";
 
-export default function KatalogInteraktif({ daftarProduk = [] }) {
+export default function KatalogInteraktif({ daftarProduk = [], urutAktif = "terbaru" }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [kataKunci, setKataKunci] = useState("");
   const [kategoriDipilih, setKategoriDipilih] = useState("Semua");
 
@@ -33,6 +37,18 @@ export default function KatalogInteraktif({ daftarProduk = [] }) {
     });
   }, [daftarProduk, kategoriDipilih, kataKunci]);
 
+  // Handler pengurutan server (US-15)
+  const handleGantiUrutan = (opsi) => {
+    const params = new URLSearchParams(searchParams ? searchParams.toString() : "");
+    if (opsi === "terbaru") {
+      params.delete("urut");
+    } else {
+      params.set("urut", opsi);
+    }
+    const queryStr = params.toString();
+    router.push(queryStr ? `/?${queryStr}` : "/");
+  };
+
   return (
     <div className="flex flex-col gap-6">
       {/* Kolom Pencarian */}
@@ -55,25 +71,48 @@ export default function KatalogInteraktif({ daftarProduk = [] }) {
         )}
       </div>
 
-      {/* Filter Kategori */}
-      <div className="flex flex-wrap gap-2">
-        {daftarKategori.map((kategori) => {
-          const aktif = kategoriDipilih === kategori;
-          return (
-            <button
-              key={kategori}
-              type="button"
-              onClick={() => setKategoriDipilih(kategori)}
-              className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-colors ${
-                aktif
-                  ? "bg-utama text-white"
-                  : "border border-garis bg-permukaan text-teks-lembut hover:border-utama hover:text-utama"
-              }`}
-            >
-              {kategori}
-            </button>
-          );
-        })}
+      {/* Filter Kategori & Opsi Pengurutan (US-11 & US-15) */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* Pilihan Kategori */}
+        <div className="flex flex-wrap gap-2">
+          {daftarKategori.map((kategori) => {
+            const aktif = kategoriDipilih === kategori;
+            return (
+              <button
+                key={kategori}
+                type="button"
+                onClick={() => setKategoriDipilih(kategori)}
+                className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-colors ${
+                  aktif
+                    ? "bg-utama text-white"
+                    : "border border-garis bg-permukaan text-teks-lembut hover:border-utama hover:text-utama"
+                }`}
+              >
+                {kategori}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Pilihan Urutan (US-15) */}
+        <div className="flex items-center gap-2">
+          <label
+            htmlFor="pilih-urutan"
+            className="text-xs font-semibold text-teks-lembut whitespace-nowrap"
+          >
+            Urutkan:
+          </label>
+          <select
+            id="pilih-urutan"
+            value={urutAktif}
+            onChange={(e) => handleGantiUrutan(e.target.value)}
+            className="rounded-lg border border-garis bg-latar px-3 py-1.5 text-xs font-semibold text-teks focus:border-utama focus:outline-none"
+          >
+            <option value="terbaru">Terbaru</option>
+            <option value="termurah">Harga: Termurah</option>
+            <option value="termahal">Harga: Termahal</option>
+          </select>
+        </div>
       </div>
 
       {/* Daftar Produk / Hasil Filter */}
@@ -105,4 +144,3 @@ export default function KatalogInteraktif({ daftarProduk = [] }) {
     </div>
   );
 }
-

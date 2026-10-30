@@ -4,16 +4,29 @@ import { toko } from "@/lib/toko";
 
 export const dynamic = "force-dynamic";
 
-export default async function HalamanKatalog() {
+export default async function HalamanKatalog({ searchParams }) {
+  const params = await searchParams;
+  const urut = params?.urut || "terbaru";
+
   let daftarProduk = null;
   let pesanError = null;
 
   try {
     const supabase = createServerClient();
-    const { data, error } = await supabase
-      .from("produk")
-      .select("*")
-      .order("id", { ascending: true });
+    let kueri = supabase.from("produk").select("*");
+
+    if (urut === "termurah") {
+      kueri = kueri.order("harga", { ascending: true });
+    } else if (urut === "termahal") {
+      kueri = kueri.order("harga", { ascending: false });
+    } else {
+      // Default: terbaru
+      kueri = kueri
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false });
+    }
+
+    const { data, error } = await kueri;
 
     if (error) {
       pesanError = error.message || "Gagal mengambil data produk dari database.";
@@ -53,7 +66,7 @@ export default async function HalamanKatalog() {
             <p className="text-base font-medium text-teks-lembut">Belum ada produk</p>
           </div>
         ) : (
-          <KatalogInteraktif daftarProduk={daftarProduk} />
+          <KatalogInteraktif daftarProduk={daftarProduk} urutAktif={urut} />
         )}
       </section>
     </>
