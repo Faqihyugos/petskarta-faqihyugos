@@ -100,6 +100,7 @@ export async function tambahProduk(prevState, formData) {
   const kategori = form?.get?.("kategori")?.toString()?.trim() || null;
   const foto_url = form?.get?.("foto_url")?.toString()?.trim() || null;
   const deskripsi = form?.get?.("deskripsi")?.toString()?.trim() || null;
+  const status = form?.get?.("status")?.toString()?.trim();
 
   if (!nama) {
     return { error: "Nama produk wajib diisi." };
@@ -121,15 +122,24 @@ export async function tambahProduk(prevState, formData) {
     return { error: "Anda harus login terlebih dahulu untuk menambah produk." };
   }
 
-  const { error } = await supabase.from("produk").insert([
-    {
-      nama,
-      harga,
-      kategori,
-      foto_url,
-      deskripsi,
-    },
-  ]);
+  // Format status ke dalam deskripsi tanpa merusak skema tabel
+  let finalDeskripsi = deskripsi || "";
+  finalDeskripsi = finalDeskripsi.replace(/\[STATUS:(PENUH|TERADOPSI)\]/gi, "").trim();
+  if (status === "penuh") {
+    finalDeskripsi = finalDeskripsi ? `${finalDeskripsi}\n\n[STATUS:PENUH]` : "[STATUS:PENUH]";
+  } else if (status === "teradopsi") {
+    finalDeskripsi = finalDeskripsi ? `${finalDeskripsi}\n\n[STATUS:TERADOPSI]` : "[STATUS:TERADOPSI]";
+  }
+
+  const payload = {
+    nama,
+    harga,
+    kategori,
+    foto_url,
+    deskripsi: finalDeskripsi || null,
+  };
+
+  const { error } = await supabase.from("produk").insert([payload]);
 
   if (error) {
     return { error: `Gagal menambahkan produk: ${error.message}` };
@@ -159,6 +169,7 @@ export async function ubahProduk(idOrPrevState, formDataOrPrevState, maybeFormDa
   const kategori = (form instanceof FormData ? form.get("kategori") : form?.kategori)?.toString()?.trim() || null;
   const foto_url = (form instanceof FormData ? form.get("foto_url") : form?.foto_url)?.toString()?.trim() || null;
   const deskripsi = (form instanceof FormData ? form.get("deskripsi") : form?.deskripsi)?.toString()?.trim() || null;
+  const status = (form instanceof FormData ? form.get("status") : form?.status)?.toString()?.trim();
 
   if (!id) {
     return { error: "ID produk tidak valid." };
@@ -184,6 +195,15 @@ export async function ubahProduk(idOrPrevState, formDataOrPrevState, maybeFormDa
     return { error: "Anda harus login terlebih dahulu untuk mengubah produk." };
   }
 
+  // Format status ke dalam deskripsi tanpa merusak skema tabel
+  let finalDeskripsi = deskripsi || "";
+  finalDeskripsi = finalDeskripsi.replace(/\[STATUS:(PENUH|TERADOPSI)\]/gi, "").trim();
+  if (status === "penuh") {
+    finalDeskripsi = finalDeskripsi ? `${finalDeskripsi}\n\n[STATUS:PENUH]` : "[STATUS:PENUH]";
+  } else if (status === "teradopsi") {
+    finalDeskripsi = finalDeskripsi ? `${finalDeskripsi}\n\n[STATUS:TERADOPSI]` : "[STATUS:TERADOPSI]";
+  }
+
   const { error } = await supabase
     .from("produk")
     .update({
@@ -191,7 +211,7 @@ export async function ubahProduk(idOrPrevState, formDataOrPrevState, maybeFormDa
       harga,
       kategori,
       foto_url,
-      deskripsi,
+      deskripsi: finalDeskripsi || null,
     })
     .eq("id", id);
 

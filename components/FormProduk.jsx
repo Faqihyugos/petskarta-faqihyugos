@@ -13,9 +13,22 @@ export default function FormProduk({ produk = {}, labelTombol, action }) {
     null
   );
 
+  // Deteksi status awal jika tersimpan di produk.status atau di dalam deskripsi tag
+  const initialStatus =
+    produk.status ||
+    (produk.deskripsi?.includes("[STATUS:PENUH]")
+      ? "penuh"
+      : produk.deskripsi?.includes("[STATUS:TERADOPSI]")
+      ? "teradopsi"
+      : "tersedia");
+  const cleanInitialDeskripsi = (produk.deskripsi || "")
+    .replace(/\[STATUS:(PENUH|TERADOPSI)\]/gi, "")
+    .trim();
+
   const [nama, setNama] = useState(produk.nama || "");
   const [kategori, setKategori] = useState(produk.kategori || "");
-  const [deskripsi, setDeskripsi] = useState(produk.deskripsi || "");
+  const [deskripsi, setDeskripsi] = useState(cleanInitialDeskripsi);
+  const [status, setStatus] = useState(initialStatus);
   const [loadingAI, setLoadingAI] = useState(false);
   const [pesanAI, setPesanAI] = useState(null);
 
@@ -72,12 +85,37 @@ export default function FormProduk({ produk = {}, labelTombol, action }) {
         value={kategori}
         onChange={(e) => setKategori(e.target.value)}
       />
-      <Input
-        label="Link foto"
-        name="foto_url"
-        placeholder="https://... atau /produk/nama-file.svg"
-        defaultValue={produk.foto_url}
-      />
+      <div className="flex flex-col gap-1.5">
+        <Input
+          label="Link foto (Mendukung multi-foto)"
+          name="foto_url"
+          placeholder="https://... atau pisahkan beberapa URL dengan koma (,)"
+          defaultValue={produk.foto_url}
+        />
+        <p className="text-xs text-teks-lembut">
+          Untuk galeri foto (US-18), Anda dapat memasukkan lebih dari satu URL foto yang dipisahkan tanda koma (,).
+        </p>
+      </div>
+
+      {/* Status Ketersediaan - US-19 */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-sm font-semibold text-teks">
+          Status Ketersediaan
+        </label>
+        <select
+          name="status"
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          className="w-full rounded-lg border border-garis bg-latar px-3 py-2.5 text-base text-teks focus:border-utama focus:outline-none"
+        >
+          <option value="tersedia">Tersedia (Ready Adopsi / Kamar Tersedia)</option>
+          <option value="teradopsi">Sudah Teradopsi (Kelinci)</option>
+          <option value="penuh">Kamar Penuh (Hotel &amp; Daycare)</option>
+        </select>
+        <p className="text-xs text-teks-lembut">
+          Item dengan status &quot;Sudah Teradopsi&quot; atau &quot;Kamar Penuh&quot; otomatis menampilkan badge status dan tombol WhatsApp beralih ke daftar tunggu.
+        </p>
+      </div>
 
       {/* Deskripsi & Tombol Bantuan AI (Gemini) - US-14 */}
       <div className="flex flex-col gap-1.5">

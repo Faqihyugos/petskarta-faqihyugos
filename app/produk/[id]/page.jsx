@@ -2,8 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import TombolWhatsApp from "@/components/TombolWhatsApp";
 import KartuProduk from "@/components/KartuProduk";
+import GaleriProduk from "@/components/GaleriProduk";
 import { createServerClient } from "@/lib/supabase/server";
 import { formatRupiah } from "@/lib/format";
+import { cekKetersediaan, bersihkanDeskripsi } from "@/lib/ketersediaan";
 
 export default async function HalamanDetailProduk({ params }) {
   const { id } = await params;
@@ -23,6 +25,8 @@ export default async function HalamanDetailProduk({ params }) {
     notFound();
   }
 
+  const { tersedia, label } = cekKetersediaan(produk);
+
   // US-17: Ambil rekomendasi produk/layanan terkait dari database Supabase (tanpa item saat ini)
   let rekomendasi = [];
   try {
@@ -40,11 +44,9 @@ export default async function HalamanDetailProduk({ params }) {
   return (
     <div className="flex flex-col py-8 md:py-12">
       <article className="grid gap-8 md:grid-cols-2">
-        <img
-          src={produk.foto_url}
-          alt={produk.nama}
-          className="aspect-square w-full rounded-2xl border border-garis bg-permukaan object-cover"
-        />
+        {/* US-18: Galeri Multi-Foto Interaktif */}
+        <GaleriProduk fotoUrl={produk.foto_url} nama={produk.nama} />
+
         <div className="flex flex-col gap-4">
           <Link
             href="/"
@@ -52,16 +54,30 @@ export default async function HalamanDetailProduk({ params }) {
           >
             &larr; Kembali ke katalog
           </Link>
-          <p className="text-sm text-teks-lembut">{produk.kategori}</p>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-teks-lembut">{produk.kategori}</span>
+            {/* US-19: Label Status Ketersediaan */}
+            {!tersedia && (
+              <span className="rounded-md bg-bahaya px-2 py-0.5 text-xs font-bold text-white shadow-sm">
+                {label}
+              </span>
+            )}
+          </div>
+
           <h1 className="text-3xl font-extrabold leading-tight tracking-tight">
             {produk.nama}
           </h1>
+
           <p className="self-start rounded-md bg-harga-latar px-3 py-1 text-xl font-bold text-harga">
             {formatRupiah(produk.harga)}
           </p>
+
           <p className="max-w-prose leading-relaxed text-teks-lembut">
-            {produk.deskripsi}
+            {bersihkanDeskripsi(produk.deskripsi)}
           </p>
+
+          {/* US-12 & US-19: Modul Pemesanan / Daftar Tunggu WhatsApp */}
           <TombolWhatsApp produk={produk} />
         </div>
       </article>
