@@ -92,3 +92,21 @@ export async function gantiPassword(prevState, formData) {
 
 export const updatePassword = gantiPassword;
 
+/**
+ * Memverifikasi status login admin di server.
+ * Mengembalikan data user admin jika terautentikasi, atau null jika tidak valid.
+ */
+export async function verifikasiAdmin() {
+  const supabase = await createAuthServerClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    return null;
+  }
+
+  return user;
+}
+
