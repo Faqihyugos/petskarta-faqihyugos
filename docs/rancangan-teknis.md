@@ -1,68 +1,124 @@
-# Rancangan Teknis
+# Rancangan Teknis: Platform Digital Petskarta
 
-## Alur data
+## 1. Alur Data & Arsitektur
 
 ```
-Browser pengunjung/admin
+Peramban Pengunjung / Admin
         |
         v
-Next.js di Vercel (server)          <- semua akses Supabase terjadi di sini
-  - Server Component: membaca data
-  - Server Action: memproses form
-  - proxy.js: menjaga halaman /admin
+Next.js 16 di Vercel (Server Runtime)    <- Seluruh interaksi Supabase terjadi di sini
+  - Server Component: Membaca katalog kelinci, paket layanan, direktori cabang, ulasan
+  - Server Action: Memproses form booking, login admin, mutasi data, panggilan AI Gemini
+  - proxy.js: Proteksi rute `/admin` dan verifikasi sesi
+  - JSON-LD Injection: Schema markup PetStore & LocalBusiness untuk pemulihan SEO Google
         |
         v
 Supabase
-  - Tabel produk (RLS aktif)
-  - Auth (akun admin)
+  - Database PostgreSQL: Tabel `produk` (Kelinci, Hotel, Grooming, Aksesoris) + RLS aktif
+  - Supabase Auth: Otentikasi aman akun admin Petskarta
+  - Supabase Storage: Penyimpanan foto kelinci & dokumentasi fasilitas kamar hotel
 ```
 
-Browser tidak pernah berhubungan langsung dengan Supabase. Alamat proyek dan kunci Supabase hanya ada di server.
+Peramban klien tidak pernah berhubungan langsung dengan endpoint Supabase. Kunci rahasia dan konfigurasi sensitif terisolasi penuh di lingkungan server Vercel.
 
-## Dua jenis koneksi Supabase
+---
 
-| Koneksi | Kunci | Dipakai untuk |
+## 2. Koneksi Supabase
+
+| Koneksi | Kunci / Kredensial | Penggunaan di Sistem Petskarta |
 | --- | --- | --- |
-| Koneksi server untuk pengunjung | `SUPABASE_SECRET_KEY` | Membaca katalog dan detail produk (pengunjung tidak login, dan RLS menolak akses publik) |
-| Koneksi sesi admin | `SUPABASE_PUBLISHABLE_KEY` + cookie login (`@supabase/ssr`) | Login, keluar, ganti password, dan aksi tambah/ubah/hapus produk |
+| **Koneksi Server Publik** | `SUPABASE_SECRET_KEY` | Membaca katalog kelinci siap adopsi, paket Bunny Hotel, ulasan publik, dan detail layanan (Server Component). Pengunjung tidak memerlukan sesi login, dan akses dibaca aman oleh server. |
+| **Koneksi Sesi Admin** | `SUPABASE_PUBLISHABLE_KEY` + Cookie Sesi (`@supabase/ssr`) | Otentikasi admin, logout, ganti password, penambahan stok kelinci, pembaruan status kamar hotel, dan moderasi ulasan. |
 
-Kunci rahasia melewati semua aturan RLS, jadi hanya dipakai untuk membaca data publik. Aksi yang mengubah data memakai koneksi sesi admin, sehingga RLS tetap berlaku.
+Kunci rahasia (`SUPABASE_SECRET_KEY`) hanya digunakan di lingkungan server untuk membaca data publik. Segala aksi mutasi data yang mengubah database wajib menggunakan sesi admin terotentikasi sehingga aturan Row Level Security (RLS) senantiasa ditegakkan.
 
-## Struktur folder
+---
+
+## 3. Struktur Folder
 
 ```
 app/
-  page.jsx                  katalog (US-01)
-  produk/[id]/page.jsx      detail produk (US-02)
+  page.jsx                     Beranda Petskarta (Trust Signal 5.0, Hero, Katalog Layanan/Adopsi, Direktori Cabang)
+  produk/[id]/page.jsx         Detail Kelinci Hias / Paket Bunny Hotel / Layanan Grooming (US-02)
   admin/
-    login/page.jsx          login (US-04)
-    page.jsx                daftar produk admin (US-07, bonus)
-    password/page.jsx       ganti password (US-05)
-    produk/baru/page.jsx    tambah produk (US-08, bonus)
-    produk/[id]/ubah/...    ubah produk (US-09, bonus)
-components/                 komponen tampilan (lihat DESIGN.md)
+    login/page.jsx             Login Admin Petskarta (US-04)
+    page.jsx                   Dashboard Ringkasan & Manajemen Katalog Admin (US-07, US-30)
+    password/page.jsx          Ganti Password Admin (US-05)
+    produk/baru/page.jsx       Tambah Kelinci / Layanan Baru (US-08)
+    produk/[id]/ubah/page.jsx  Ubah Data Kelinci / Tarif Layanan (US-09)
+components/                    Komponen UI konsisten (lihat DESIGN.md)
+  Header.jsx                   Navigasi, brand identity Petskarta, dan tautan cepat cabang
+  Footer.jsx                   Direktori dua cabang, kontak resmi, hak cipta sejak 2016
+  KartuProduk.jsx              Kartu katalog kelinci & layanan dengan status ketersediaan
+  TombolWhatsApp.jsx           Tombol pesan/booking dinamis terarah ke WhatsApp cabang
+  TabelProduk.jsx              Tabel manajemen admin
+  FormProduk.jsx               Form data kelinci/layanan
+  NavAdmin.jsx                 Navigasi panel admin
 lib/
-  toko.js                   identitas toko dan nomor WhatsApp
-  data-contoh.js            data contoh sebelum terhubung database
-  format.js                 format rupiah
-docs/                       dokumen proyek
+  toko.js                      Data identitas resmi Petskarta, alamat dua cabang, & nomor WhatsApp cadangan
+  data-contoh.js               Data contoh kelinci & layanan Petskarta sebelum koneksi database
+  format.js                    Format rupiah dan utilitas penanggalan booking
+docs/                          Dokumentasi teknis, PRD, dan panduan proyek
 ```
 
-File yang akan dibuat saat mengerjakan user story:
-
+Berkas pendukung sistem:
 ```
-lib/supabase/            koneksi Supabase untuk server
-app/admin/actions.js     Server Action untuk login, ganti password, dan kelola produk
-proxy.js                 proteksi halaman /admin (US-06)
+lib/supabase/                  Utilitas inisialisasi koneksi Supabase server
+app/admin/actions.js           Server Actions terproteksi untuk auth & mutasi data
+proxy.js                       Proteksi rute `/admin` berbasis server proxy Next.js 16
 ```
 
-## Pesan WhatsApp (US-03)
+---
 
-Format link: `https://wa.me/<nomor>?text=<pesan>`
+## 4. Logika Smart Booking & WhatsApp Routing Multi-Cabang (US-03, US-12, US-43)
 
-- `<nomor>` diambil dari `lib/toko.js`, format internasional tanpa tanda + (contoh `6281234567890`).
-- `<pesan>` berisi nama dan harga produk, di-encode dengan `encodeURIComponent`.
+Petskarta memiliki dua cabang operasional dengan spesialisasi berbeda:
+1. **Cabang Pondok Pinang (Jakarta Selatan):** Pusat adopsi kelinci hias (*Holland Lop*, *Netherland Dwarf*), Bunny Hotel, Grooming, dan Perlengkapan.
+2. **Cabang Jatinegara (Jakarta Timur):** Khusus layanan *Bunny Hotel*, *Grooming*, dan pengobatan *Scabies Healer*.
 
-## Akun admin
+### Format Tautan WhatsApp
+Format URL: `https://wa.me/<nomorCabang>?text=<pesanTerformat>`
 
-Akun admin dibuat dari skrip di panduan workshop (bukan dari aplikasi) dan password bawaannya wajib diganti lewat US-05. Pendaftaran akun baru dimatikan di pengaturan Supabase Auth.
+- `<nomorCabang>`: Nomor WhatsApp spesifik cabang yang dipilih pengunjung (format internasional tanpa tanda +, contoh `62812xxxx`).
+- `<pesanTerformat>`: Teks otomatis yang disusun rapi dan di-encode menggunakan `encodeURIComponent`.
+
+Contoh pesan otomatis untuk booking Bunny Hotel:
+```text
+Halo Admin Petskarta (Cabang Jatinegara),
+Saya ingin melakukan reservasi Bunny Hotel:
+- Paket: Paket Deluxe (AC + CCTV)
+- Jadwal: 24 Maret 2026 s.d. 30 Maret 2026 (6 Hari)
+- Jumlah Hewan: 1 Ekor Kelinci (Holland Lop)
+- Catatan: Mohon alas foot rest plastik dan free rumput timothy.
+Mohon info ketersediaan slot kamar. Terima kasih!
+```
+
+Contoh pesan otomatis untuk adopsi kelinci:
+```text
+Halo Admin Petskarta (Cabang Pondok Pinang),
+Saya tertarik untuk mengadopsi kelinci:
+- Ras: Holland Lop Broken Orange (Junior)
+- Kode/ID: #101
+- Harga: Rp 850.000
+Apakah kelinci ini masih ready dan melayani pengiriman bergaransi?
+```
+
+---
+
+## 5. Implementasi Local SEO & Structured Data (US-26, US-27)
+
+Untuk mengatasi disinformasi status "Tutup Permanen" di Google Maps dan anomali GoFood, sistem menyematkan metadata terstruktur JSON-LD Schema.org di Server Component:
+- Tipe Schema: `LocalBusiness` / `PetStore`
+- Nama Usaha: `Petskarta - Spesialis Kelinci Hias & Bunny Hotel Jakarta`
+- Berdiri Sejak: `2016`
+- Rating Agregat: `5.0` bintang dari `178` ulasan
+- Cabang Terdaftar:
+  - Cabang Pondok Pinang: Jl. Pondok Pinang Raya No. 18, Kebayoran Lama, Jakarta Selatan
+  - Cabang Jatinegara: Jakarta Timur (Khusus Hotel & Scabies Healer)
+- Tautan Media Sosial Resmi: Instagram `@petskartaa`, `@petskarta.jatinegara`, `@katalogkelinci.petskarta`, TikTok `@petskarta.official`, Shopee Petskarta.
+
+---
+
+## 6. Pengaturan Akun Admin
+
+Akun admin dibuat langsung melalui Supabase Dashboard Auth atau skrip generator admin, dan registrasi publik dinonaktifkan. Password bawaan wajib diganti pada pengujian pertama melalui halaman `/admin/password` (US-05).

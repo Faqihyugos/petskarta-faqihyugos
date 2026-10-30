@@ -1,4 +1,4 @@
--- Skema database Katalog UMKM
+-- Skema database Petskarta (Katalog Kelinci Hias, Bunny Hotel & Perawatan)
 -- Cara pakai: Supabase > SQL Editor > New query > tempel seluruh isi file ini > Run.
 -- Aman dijalankan ulang.
 
@@ -35,56 +35,46 @@ create policy "admin_ubah_produk" on public.produk
 create policy "admin_hapus_produk" on public.produk
   for delete to authenticated using (true);
 
--- 3. Data produk awal (hanya diisi jika tabel masih kosong)
+-- 3. Data produk & layanan awal Petskarta (hanya diisi jika tabel masih kosong)
 insert into public.produk (nama, harga, deskripsi, foto_url, kategori)
 select * from (values
-  ('Kopi Bubuk Robusta 250 g', 45000, 'Biji robusta disangrai sedang lalu digiling halus. Cocok untuk kopi tubruk dan kopi susu.', '/produk/kopi.svg', 'Minuman'),
-  ('Keripik Singkong Balado', 15000, 'Singkong iris tipis, digoreng renyah, dibalut bumbu balado pedas manis.', '/produk/keripik.svg', 'Camilan'),
-  ('Sambal Bawang Botol 150 ml', 25000, 'Cabai rawit dan bawang putih goreng dengan minyak, tahan hingga 2 bulan.', '/produk/sambal.svg', 'Bumbu'),
-  ('Kue Nastar Toples 500 g', 85000, 'Nastar lembut dengan selai nanas buatan sendiri. Dikemas toples kedap udara.', '/produk/nastar.svg', 'Kue kering'),
-  ('Tas Anyaman Pandan', 120000, 'Dianyam tangan dari daun pandan kering, dilapisi kain di bagian dalam.', '/produk/tas.svg', 'Kerajinan'),
-  ('Kain Batik Cap 2 m', 175000, 'Batik cap motif parang di atas kain katun primisima, panjang 2 meter.', '/produk/batik.svg', 'Kain')
+  ('Holland Lop Broken Orange (Junior)', 850000, 'Kelinci hias Holland Lop usia 2,5 bulan. Karakter sangat ramah, telinga turun sempurna, sehat dan lincah. Sudah diberikan obat cacing dan vitamin. Garansi pengiriman se-Jawa dan luar pulau.', '/produk/holland-lop.svg', 'Kelinci Hias'),
+  ('Netherland Dwarf Pure White (Pedigree)', 950000, 'Kelinci kerdil Netherland Dwarf mata ruby/otter, telinga tegak pendek, berat dewasa hanya ~1 kg. Cocok untuk indoor apartemen. Bersertifikat dan konsultasi perawatan seumur hidup gratis.', '/produk/netherland-dwarf.svg', 'Kelinci Hias'),
+  ('Bunny Hotel Deluxe (AC + Pantauan CCTV)', 65000, 'Layanan penitipan kelinci harian spesialisasi liburan/mudik. Fasilitas kamar luas ber-AC/exhaust, alas foot rest plastik ramah telapak kaki, free unlimited rumput Timothy, dan daily playtime.', '/produk/bunny-hotel.svg', 'Bunny Hotel'),
+  ('Paket Pengobatan Scabies Healer Tuntas', 120000, 'Perawatan intensif medis ringan untuk kelinci yang terserang jamur/scabies. Termasuk suntik/oles obat scabies khusus kelinci, karantina higienis, dan edukasi pencegahan kambuh.', '/produk/scabies-healer.svg', 'Grooming & Perawatan'),
+  ('Grooming Sehat Kelinci & Kutu/Jamur', 75000, 'Layanan grooming lengkap: pembersihan telinga, perapian bulu gimbal, potong kuku aman, mandi kering herbal, dan spray anti parasit. Tersedia opsi Home Grooming ke rumah Anda.', '/produk/grooming.svg', 'Grooming & Perawatan'),
+  ('Timothy Hay First Cut Premium 1 Kg', 45000, 'Rumput timothy pilihan serat tinggi untuk menjaga kesehatan sistem pencernaan dan mengikis gigi kelinci secara alami. Harum, minim debu, kemasan higienis kedap udara.', '/produk/timothy-hay.svg', 'Pakan & Aksesoris')
 ) as data_awal (nama, harga, deskripsi, foto_url, kategori)
 where not exists (select 1 from public.produk);
 
--- 4. Data tambahan untuk menguji paginasi, urutan, filter, dan pencarian (54 produk).
---    Bersama data awal jadi 60 produk, 10 per kategori, dengan harga dan waktu dibuat berbeda.
---    Hanya diisi sekali; kalau tidak dibutuhkan, hapus dengan:
---    delete from public.produk where deskripsi like 'Contoh untuk uji paginasi%';
+-- 4. Data tambahan untuk menguji paginasi, urutan, filter, dan pencarian Petskarta.
+--    Hanya diisi jika belum ada data uji paginasi.
 with kategori (urut, kategori, foto_url, harga_dasar, langkah, daftar) as (values
-  (1, 'Minuman', '/produk/kopi.svg', 20000, 4000, array[
-    'Kopi Arabika Gayo 250 g', 'Kopi Luwak Liar 100 g', 'Teh Melati Tubruk 100 g',
-    'Wedang Uwuh Isi 10', 'Jahe Merah Instan 250 g', 'Kopi Susu Gula Aren 250 ml',
-    'Teh Rosella Kering 50 g', 'Bajigur Instan Isi 5', 'Cokelat Bubuk Murni 200 g']),
-  (2, 'Camilan', '/produk/keripik.svg', 10000, 1500, array[
-    'Keripik Tempe Original', 'Keripik Pisang Cokelat', 'Rempeyek Kacang 250 g',
-    'Basreng Pedas Daun Jeruk', 'Makaroni Bantat Pedas', 'Kerupuk Kulit Sapi 100 g',
-    'Emping Melinjo Manis', 'Keripik Kentang Balado', 'Kacang Telur 250 g']),
-  (3, 'Bumbu', '/produk/sambal.svg', 18000, 2500, array[
-    'Sambal Cumi Asin 150 ml', 'Sambal Teri Medan 150 ml', 'Bumbu Rendang Instan',
-    'Bumbu Pecel Kacang 250 g', 'Sambal Matah Botol 150 ml', 'Petis Udang 200 g',
-    'Bumbu Rawon Instan', 'Saus Kacang Sate 250 g', 'Terasi Udang Bakar 100 g']),
-  (4, 'Kue kering', '/produk/nastar.svg', 60000, 5000, array[
-    'Kastengel Keju Toples 500 g', 'Putri Salju Toples 500 g', 'Lidah Kucing Toples 400 g',
-    'Kue Semprit Toples 500 g', 'Sagu Keju Toples 400 g', 'Kue Kacang Toples 500 g',
-    'Choco Chip Cookies 400 g', 'Bolu Kering Jadul 300 g', 'Kue Bawang 250 g']),
-  (5, 'Kerajinan', '/produk/tas.svg', 35000, 15000, array[
-    'Dompet Anyaman Rotan', 'Topi Pandan Pantai', 'Keranjang Bambu Serbaguna',
-    'Tatakan Gelas Eceng Gondok Isi 6', 'Gantungan Kunci Kayu Ukir', 'Tas Rajut Benang Katun',
-    'Vas Bunga Gerabah', 'Sandal Anyaman Mendong', 'Kotak Tisu Kayu Jati']),
-  (6, 'Kain', '/produk/batik.svg', 150000, 25000, array[
-    'Kain Batik Tulis Lasem 2 m', 'Sarung Tenun Samarinda', 'Kain Tenun Ikat NTT 2 m',
-    'Selendang Songket Palembang', 'Kain Lurik Klaten 2 m', 'Batik Kawung Katun 2 m',
-    'Kain Jumputan Palembang 2 m', 'Syal Batik Sutra', 'Kain Sasirangan Banjar 2 m'])
+  (1, 'Kelinci Hias', '/produk/holland-lop.svg', 700000, 50000, array[
+    'Holland Lop Solid Tortoise Baby', 'Holland Lop Broken Black Jr', 'Netherland Dwarf Chestnut Jr',
+    'Netherland Dwarf Agouti Pure', 'Holland Lop Blue Otic Jr', 'Mini Rex Velvet Soft Touch',
+    'Fuzzy Lop White Snow', 'Guinea Pig American Short Hair', 'Guinea Pig Abyssinian Tri-Color']),
+  (2, 'Bunny Hotel', '/produk/bunny-hotel.svg', 50000, 10000, array[
+    'Bunny Hotel Standard Kipas Angin', 'Bunny Hotel VIP Room CCTV 24 Jam', 'Guinea Pig Suite Room Luas',
+    'Paket Penitipan Mudik Lebaran 7 Hari', 'Paket Penitipan Libur Natal 5 Hari', 'Bunny Hotel Long Stay (Bulanan)',
+    'Pet Hotel Day Care (Transit Harian)', 'Bunny Hotel Pasca Steril / Medis', 'Pet Hotel Pasangan 2 Kelinci 1 Kamar']),
+  (3, 'Grooming & Perawatan', '/produk/grooming.svg', 50000, 15000, array[
+    'Grooming Reguler Kelinci Kering', 'Home Grooming Panggilan ke Rumah', 'Potong Kuku & Bersih Telinga Saja',
+    'Paket Scabies Healer Stadium Ringan', 'Paket Scabies Healer Stadium Lanjut', 'Treatment Jamur & Mandi Belerang Khusus',
+    'Detangling Bulu Kusut/Gimbal Longhair', 'Grooming Khusus Guinea Pig Wangi', 'Pemeriksaan Kesehatan Fisik Rutin']),
+  (4, 'Pakan & Aksesoris', '/produk/timothy-hay.svg', 35000, 12000, array[
+    'Alfalfa Hay Premium Anakan Kelinci', 'Pelet Kelinci Nutrisi Lengkap 1 Kg', 'Kandang Lipat Coating Plastik + Foot Rest',
+    'Toilet Kelinci Sudut Higienis Kotak', 'Botol Minum Gantung Anti Bocor 500 ml', 'Mangkuk Pakan Keramik Berat Anti Tumpah',
+    'Terowongan Mainan Rumput Alami', 'Alas Foot Rest Plastik Cadangan', 'Vitamin Pencernaan & Imun Kelinci'])
 )
 insert into public.produk (nama, harga, deskripsi, foto_url, kategori, created_at)
 select
   p.nama,
   k.harga_dasar + p.ke * k.langkah,
-  format('Contoh untuk uji paginasi, urutan, dan pencarian. Produk %s nomor %s.', lower(k.kategori), p.ke),
+  format('Layanan resmi dari Petskarta Jakarta untuk kategori %s. Kode katalog PK-%s. Hubungi admin cabang Pondok Pinang / Jatinegara untuk ketersediaan.', lower(k.kategori), p.ke),
   k.foto_url,
   k.kategori,
   now() - make_interval(hours => ((k.urut - 1) * 9 + p.ke)::int)
 from kategori k
 cross join lateral unnest(k.daftar) with ordinality as p (nama, ke)
-where not exists (select 1 from public.produk where deskripsi like 'Contoh untuk uji paginasi%');
+where not exists (select 1 from public.produk where deskripsi like 'Layanan resmi dari Petskarta Jakarta%');
