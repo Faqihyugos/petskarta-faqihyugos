@@ -16,7 +16,8 @@ export default async function HalamanAdmin() {
     const { data, error } = await supabase
       .from("produk")
       .select("*")
-      .order("id", { ascending: true });
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false });
 
     if (error) {
       // Fallback ke server client bila sesi auth ada kendala
@@ -24,7 +25,8 @@ export default async function HalamanAdmin() {
       const fallbackResult = await fallbackClient
         .from("produk")
         .select("*")
-        .order("id", { ascending: true });
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false });
 
       if (fallbackResult.error) {
         pesanError = fallbackResult.error.message;

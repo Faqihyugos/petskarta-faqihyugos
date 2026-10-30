@@ -1,6 +1,6 @@
 import NavAdmin from "@/components/NavAdmin";
 import FormImporCSV from "@/components/FormImporCSV";
-import { createServerClient } from "@/lib/supabase/server";
+import { createAuthServerClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +10,7 @@ export const metadata = {
 };
 
 export default async function HalamanAdminImpor() {
-  const supabase = createServerClient();
+  const supabase = await createAuthServerClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

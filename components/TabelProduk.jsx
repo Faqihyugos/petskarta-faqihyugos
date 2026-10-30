@@ -8,8 +8,6 @@ import { ekstrakPrioritas } from "@/lib/prioritas";
 
 export default function TabelProduk({ daftarProduk = [] }) {
   const [kataKunci, setKataKunci] = useState("");
-  const [halaman, setHalaman] = useState(1);
-  const pageSize = 8;
   const [isPending, startTransition] = useTransition();
 
   // US-33: Pencarian di panel admin
@@ -23,13 +21,6 @@ export default function TabelProduk({ daftarProduk = [] }) {
         p.deskripsi?.toLowerCase().includes(q)
     );
   }, [daftarProduk, kataKunci]);
-
-  // US-33: Paginasi rapi di admin
-  const totalHalaman = Math.max(1, Math.ceil(hasilFilter.length / pageSize));
-  const dataHalaman = useMemo(() => {
-    const from = (halaman - 1) * pageSize;
-    return hasilFilter.slice(from, from + pageSize);
-  }, [hasilFilter, halaman, pageSize]);
 
   const handleToggleArsip = (id) => {
     startTransition(async () => {
@@ -95,7 +86,7 @@ export default function TabelProduk({ daftarProduk = [] }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-garis">
-              {dataHalaman.map((produk) => {
+              {hasilFilter.map((produk) => {
                 const isArsip = produk.deskripsi?.includes("[STATUS:ARSIP]");
                 const isTeradopsi = produk.deskripsi?.includes("[STATUS:TERADOPSI]");
                 const isPenuh = produk.deskripsi?.includes("[STATUS:PENUH]");
@@ -210,30 +201,12 @@ export default function TabelProduk({ daftarProduk = [] }) {
         </div>
       )}
 
-      {/* Kontrol Paginasi (US-33) */}
-      {totalHalaman > 1 && (
+      {/* Keterangan Jumlah Total Produk (US-51) */}
+      {hasilFilter.length > 0 && (
         <div className="flex items-center justify-between px-2 pt-2 text-xs text-teks-lembut">
           <p>
-            Menampilkan halaman {halaman} dari {totalHalaman} ({hasilFilter.length} produk)
+            Menampilkan seluruh <strong>{hasilFilter.length}</strong> produk &amp; layanan (terurut dari yang paling baru ditambahkan).
           </p>
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              disabled={halaman <= 1}
-              onClick={() => setHalaman((h) => Math.max(1, h - 1))}
-              className="rounded-lg border border-garis bg-latar px-3 py-1.5 font-semibold text-teks disabled:opacity-40"
-            >
-              &larr; Sebelumnya
-            </button>
-            <button
-              type="button"
-              disabled={halaman >= totalHalaman}
-              onClick={() => setHalaman((h) => Math.min(totalHalaman, h + 1))}
-              className="rounded-lg border border-garis bg-latar px-3 py-1.5 font-semibold text-teks disabled:opacity-40"
-            >
-              Berikutnya &rarr;
-            </button>
-          </div>
         </div>
       )}
     </div>

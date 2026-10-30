@@ -5,6 +5,31 @@ import { revalidatePath } from "next/cache";
 import { createAuthServerClient } from "@/lib/supabase/server";
 import { ekstrakPrioritas, setPrioritasDeskripsi } from "@/lib/prioritas";
 
+// K-12: Rate limit percobaan login admin (maksimal 5x gagal per 5 menit)
+const loginAttemptsMap = new Map();
+
+function checkLoginRateLimit(key) {
+  const now = Date.now();
+  const windowMs = 5 * 60 * 1000;
+  const maxAttempts = 5;
+
+  const records = loginAttemptsMap.get(key) || [];
+  const validRecords = records.filter((timestamp) => now - timestamp < windowMs);
+
+  return validRecords.length < maxAttempts;
+}
+
+function recordFailedLogin(key) {
+  const now = Date.now();
+  const records = loginAttemptsMap.get(key) || [];
+  records.push(now);
+  loginAttemptsMap.set(key, records);
+}
+
+function clearLoginAttempts(key) {
+  loginAttemptsMap.delete(key);
+}
+
 export async function login(prevState, formData) {
   const form = formData instanceof FormData ? formData : prevState;
   const email = form?.get?.("email")?.toString()?.trim();
@@ -14,6 +39,14 @@ export async function login(prevState, formData) {
     return { error: "Email dan password wajib diisi." };
   }
 
+  const key = email.toLowerCase();
+  if (!checkLoginRateLimit(key)) {
+    return {
+      error:
+        "Terlalu banyak percobaan masuk yang gagal. Silakan tunggu 5 menit sebelum mencoba kembali demi keamanan akun.",
+    };
+  }
+
   const supabase = await createAuthServerClient();
   const { error } = await supabase.auth.signInWithPassword({
     email,
@@ -21,14 +54,16 @@ export async function login(prevState, formData) {
   });
 
   if (error) {
+    recordFailedLogin(key);
     return {
       error:
         error.message === "Invalid login credentials"
           ? "Email atau password salah."
-          : `Gagal masuk: ${error.message}`,
+          : "Gagal masuk: Kredensial tidak valid atau akun terkunci.",
     };
   }
 
+  clearLoginAttempts(key);
   redirect("/admin");
 }
 

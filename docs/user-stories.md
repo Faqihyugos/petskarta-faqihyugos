@@ -616,3 +616,16 @@ Kriteria selesai:
 - Integrasi ke LLM (Google Gemini API) dieksekusi murni di sisi server dengan *knowledge base* yang dibatasi pada informasi kelinci, produk, dan layanan Petskarta. (4 poin)
 - Input pertanyaan dibatasi panjang karakternya, serta dilengkapi penanganan kondisi batas (*error/timeout*) yang elegan. (4 poin)
 - Dilengkapi mekanisme pembatasan frekuensi (*rate limiting*) agar tidak disalahgunakan. (3 poin)
+
+### US-51 Tampilan Seluruh Katalog Admin & Produk Terbaru Paling Atas
+
+Sebagai admin Petskarta, saya ingin melihat seluruh produk dan layanan tanpa pembagian halaman (tanpa paginasi) di tabel manajemen admin, serta memastikan setiap produk yang baru ditambahkan langsung muncul di posisi paling atas, agar mempermudah verifikasi cepat terhadap kelinci atau paket layanan yang baru saja didaftarkan.
+
+Bernilai 10 poin.
+
+Kriteria selesai:
+
+- Tabel katalog produk dan layanan di panel admin `/admin` menampilkan seluruh item secara langsung tanpa paginasi (no pagination). (4 poin)
+- Query data produk di panel admin diurutkan berdasarkan item terbaru terlebih dahulu (`created_at` DESC dan `id` DESC) sehingga produk yang baru ditambahkan langsung berada di urutan teratas. (3 poin)
+- Filter pencarian cepat tetap berfungsi menyaring seluruh daftar produk secara instan dan menampilkan jumlah total item yang ditemukan. (3 poin)
+
